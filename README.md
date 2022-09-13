@@ -33,7 +33,7 @@ optional arguments:
 data_matcher.py [-h] -i file1 -m file2 -c cols [-e missing] [-o outfile] [-f format]
 ```
 
-^ arguments provided in square brackets [] are optional
+*^ arguments provided in square brackets [] are optional*
 
 * example usage with minimal required options: 
 
@@ -49,7 +49,7 @@ python3 merge_data.py -i input_file -m merge_file -c address,Address
 python3 merge_data.py -i input_file -m merge_file -c 1,5 -e "missing"
 ```
 
-^ default value for missing data is: -9999.99
+*^ the default value for missing data is: -9999.99*
 
 * example usage with customized name of output file:
 
@@ -57,7 +57,7 @@ python3 merge_data.py -i input_file -m merge_file -c 1,5 -e "missing"
 python3 merge_data.py -i input_file -m merge_file -c 1,5 -o my_merged_data.txt
 ```
 
-^ the default output filename is: data_output-$date
+*^ the default output filename is: data_output-$date*
 
 * example usage with Excel format of output file:
 
@@ -65,7 +65,7 @@ python3 merge_data.py -i input_file -m merge_file -c 1,5 -o my_merged_data.txt
 python3 merge_data.py -i input_file -m merge_file -c 1,5 -f 2
 ```
 
-* fully customized example usage with Excel format of output file:
+* fully customized example usage with user-provided value for missing data and output filename saved in Excel format:
 
 ```
 python3 merge_data.py -i input_file -m merge_file -c 1,5 -e missing -o my_merged_data -f 2
