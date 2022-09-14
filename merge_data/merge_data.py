@@ -16,7 +16,10 @@ def get_delimiter(text_file: str) -> str:
 
 def load_input_file(input_file):
 
-    format = input_file.split('.')[1]
+    try:
+        format = input_file.split('.')[1]
+    except:
+        format = ''
     if format == 'xlsx':
         return pd.read_excel(input_file, index_col=None, header=0)  # read xlsx file with pairs of matched labales (.xlsx)
     else:
