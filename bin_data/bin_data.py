@@ -4,6 +4,7 @@ import sys			# to manage inline arguments
 import argparse			# to convert python script into program with options
 import logging                  # to provide verbosity level
 import pandas as pd		# to easily parse json object and filter out data; require installation with conda or pip
+import numpy as np              # to parse advanced numerical data structures; require installation
 import csv			# to read any column-like text file
 
 
@@ -30,26 +31,48 @@ def identify_header(filename, sep, n=10, th=0.9):
         logging.error('Identifying data header has failed!')
 
 
-def resize_data(label_df, names, stat, n_split, split_type):
-    """Resize data (by mean or sum) for a given label using split of n-bins or n-long step"""
-    step = n_split
-    if split_type == 'bin':
-        step = round(len(label_df)/n_split, 0)
+def resize_data(label_df, names, labels, ranges, stat, n_split, split_type, decimal):
+    """Resize data (by mean or sum) for a given label using split of n-bins or n-long step or values range"""
+
+    lr = [names[labels], names[ranges]]		# labels and ranges
+    nd = [i for i in names if not i in lr] 	# numerical data
+
+    if split_type == 'value':
+        lab = label_df[lr[0]].iloc[0]
+        mini = label_df[lr[1]].min()
+        maxi = label_df[lr[1]].max()
+        groups = label_df.groupby(pd.cut(label_df[lr[1]], np.arange(mini, maxi+n_split, n_split)))
+        counts = groups[lr[0]].count().reset_index(drop=True)
+        if stat == 'ave':
+            bini = groups.mean().drop(lr[1], axis=1).reset_index()
+        else:
+            bini = groups.sum().drop(lr[1], axis=1).reset_index()            
+        bini['count'] = counts
+        bini.insert(0, lr[0], lab)
+        bini[nd] = bini[nd].round(decimal)
+        return bini
+
+    else:
+        step = n_split
+        if split_type == 'bin':
+            step = round(len(label_df)/n_split, 0)
                     
-    indi = label_df[names[0:2]].iloc[::step, :]
-    if stat == 'ave':
-        bini = label_df.loc[:,names[2:]].groupby(label_df.index // step).mean()
-    else:
-        bini = label_df.loc[:,names[2:]].groupby(label_df.index // step).sum()
+        indi = label_df[lr].iloc[::step, :]
+        if stat == 'ave':
+            bini = label_df.loc[:,nd].groupby(label_df.index // step).mean()
+        else:
+            bini = label_df.loc[:,nd].groupby(label_df.index // step).sum()
 
-    if len(indi) > 0 and len(bini) > 0:
-        return indi, bini
-    else:
-        logging.error('Resizing data has failed!')
-        sys.exit(1)
+        if len(indi) > 0 and len(bini) > 0:
+            final = pd.concat((indi.reset_index(drop=True), bini.reset_index(drop=True)), axis=1)
+            final[nd] = final[nd].round(decimal)
+            return final
+        else:
+            logging.error('Resizing data has failed!')
+            sys.exit(1)
 
 
-def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save, stat, n_split, split_type, output):
+def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save, stat, split_type, n_split, decimal, output):
     """Split Big Data into the memory-affordable chunks and resize content by mean or sum of customized split size (n-bins or n-long step)."""
 
     all_bini = []	# list of all resized df grouped by labels
@@ -63,9 +86,9 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
                 label_df = pd.read_csv(os.path.join(input_file, ifile))
                 names = list(label_df.columns)
                 logging.info('2. Resizing data using '+str(stat)+' on the '+str(n_split)+' '+str(split_type)+'s.')
-                indi, bini = resize_data(label_df, names, stat, n_split, split_type)   # bin data for a given label
+                bini = resize_data(label_df, names, labels, ranges, stat, n_split, split_type, decimal)   # bin data for a given label
                 logging.info('3. Appending resized dataframe for '+str(num)+'th label...')
-                all_bini.append(pd.concat((indi.reset_index(drop=True), bini.reset_index(drop=True)), axis=1))
+                all_bini.append(bini)
         
     # create and process chunks from raw file
     elif os.path.isfile(input_file):
@@ -90,6 +113,7 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
             else:
                 names = ['val-'+str(i) for i in range(head[1])]
                 names[ranges] = 'position'
+                names[labels] = 'label'
         logging.info('--The assigned data header is: '+str(names))
 
         # Optimize memory use when chunk size is NOT user-provided
@@ -102,7 +126,7 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
             logging.info('--You requested data chunks of '+str(chunk_size)+' rows each.')
 
         # Parse data
-        all_data = []						 # list of all matching df chunks
+        all_data = []						     # list of all matching df chunks
         label_df = pd.DataFrame()                                    # creates a new empty dataframe for each label
         this_label = ''
         chunk_id = 1
@@ -128,7 +152,7 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
                     mem2 = round(label_df.memory_usage(deep=True).sum()/1024/1024,2)
                     STATS[this_label] = [len(label_df), str(mem2)+'MB']
                     logging.info("-- the dataframe size is: "+str(len(label_df))+' rows and '+str(mem2)+'MB')
-                    if chunk_save == True:
+                    if chunk_save == 'true':
                         path = os.path.join(os.getcwd(),'CHUNKS')
                         try:
                             os.makedirs(path, exist_ok=True)
@@ -140,9 +164,9 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
     
                     # bin data for a given label
                     logging.info("3. Resizing dataframe for a label: "+str(this_label)+'...')
-                    indi, bini = resize_data(label_df, names, stat, n_split, split_type)
-                    logging.info("-- a new dataframe size is: "+str(len(indi))+' rows, resized by '+str(stat)+' on '+str(n_split)+' '+str(split_type)+'s')
-                    all_bini.append(pd.concat((indi.reset_index(drop=True), bini.reset_index(drop=True)), axis=1))
+                    bini = resize_data(label_df, names, labels, ranges, stat, n_split, split_type, decimal)
+                    logging.info("-- a new dataframe size is: "+str(len(bini))+' rows, resized by '+str(stat)+' on '+str(n_split)+' '+str(split_type)+'s')
+                    all_bini.append(bini)
 
                     # begin cycle for next label
                     this_label = lab
@@ -154,7 +178,7 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
         
         try:
             logging.info("Saving statistics of a raw file into the label_in_chunks.txt ...")
-            f = open("label_in_chunks.txt", "a")
+            f = open("label_in_chunks.txt", "w")
             for lab in LABELS.keys():
                 try:
                     f.write(str(lab)+","+str(STATS[lab][0])+","+str(STATS[lab][1])+","+str(LABELS[lab])+'\n')
@@ -229,32 +253,39 @@ if __name__ == '__main__':
     parser.add_argument(
         '-s', '--chunk-save',
         help='saves data into chunked files [default: on]',
-        type=bool,
-        dest='save',
-        default=True
+        choices=['true', 'false'],
+        default='true',
+        dest='save'
     )
     parser.add_argument(
          '-c', '--calc-stats', 
          help="select resizing opeartion: ave (mean) or sum",
          choices=['ave', 'sum'],
          default='ave', 
-         metavar='calc',
          dest='calc'         
+    )
+    parser.add_argument(
+         '-t', '--slice-type', 
+         help="select type of slicing: step (number of rows in a slice) or bin (number of slices) or value (value increment in ranges col)",
+         choices=['step', 'bin', 'value'],
+         default='step',
+         dest='type'         
     )
     parser.add_argument(
          '-n', '--slice-size', 
          help="select size of slicing",
-         type=int,
+         type=float,
          default=100,
          metavar='slice',
          dest='slice'         
     )
     parser.add_argument(
-         '-t', '--slice-type', 
-         help="select type of slicing: step (number of rows in a slice) or bin (number of slices)",
-         choices=['step', 'bin'],
-         default='step',
-         dest='type'         
+         '-d', '--decimal-out', 
+         help="provide decimal places for numerical outputs",
+         type=int,
+         default=2,
+         metavar='dec',
+         dest='dec'         
     )
     parser.add_argument(
          '-o', '--output', 
@@ -278,7 +309,11 @@ if __name__ == '__main__':
 ###-- print example of usage and help message when script is run without required arguments
     if len(sys.argv) < 3:
         parser.print_help()
-        print("\nUSAGE:\n	e.g., python3 bin_data.py -i input_file -l 0 -r 1 \n")
+        print("\nUSAGE:\n")
+        print("e.g., minimal required inputs:\n 	python3 bin_data.py -i input_file -l 0 -r 1 \n")
+        print("e.g., using raw input file:\n 	python3 bin_data.py -i hybrid.depth -l 0 -r 1 -t 'step' -n 1000 -s True -v 1 \n")
+        print("e.g., using directory of chunks:\n 	python3 bin_data.py -i CHUNKS/ -l 0 -r 1 -t 'value' -n 0.15 -s False -v 0 \n")
+        print("e.g., using default settings:\n 	python3 bin_data.py -i {path} -l {int} -r {int} -hd None -ch None -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0 \n")
         sys.exit(1)
 
     args = parser.parse_args()
@@ -290,4 +325,4 @@ if __name__ == '__main__':
     elif args.verbose == 2:
         logger.setLevel(logging.DEBUG) 
     
-    create_data_chunks(args.input, args.label, args.range, args.header, args.chunks, args.save, args.calc, args.slice, args.type, args.out)
+    create_data_chunks(args.input, args.label, args.range, args.header, args.chunks, args.save, args.calc, args.type, args.slice, args.dec, args.out)
