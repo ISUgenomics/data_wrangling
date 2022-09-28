@@ -50,6 +50,7 @@ def resize_data(label_df, names, labels, ranges, stat, n_split, split_type, deci
         bini['count'] = counts
         bini.insert(0, lr[0], lab)
         bini[nd] = bini[nd].round(decimal)
+        bini[lr[1]] = bini[lr[1]].astype(str).str.replace(', ', '-').str.replace('(','').str.replace(']','')
         return bini
 
     else:
@@ -72,15 +73,23 @@ def resize_data(label_df, names, labels, ranges, stat, n_split, split_type, deci
             sys.exit(1)
 
 
-def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save, stat, split_type, n_split, decimal, output):
+def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chunk_save, stat, split_type, n_split, decimal, output):
     """Split Big Data into the memory-affordable chunks and resize content by mean or sum of customized split size (n-bins or n-long step)."""
 
     all_bini = []	# list of all resized df grouped by labels
-
+    if llist != None:
+        if os.path.isfile(llist):
+            llist = [line.strip() for line in open(llist, 'r').readlines()]
+        elif isinstance(llist, str):
+            llist = llist.strip().split(',')
+        
     # process chunks from the directory
     if os.path.isdir(input_file):
         logging.info('0. Process chunks from the directory...')
-        for num,ifile in enumerate(os.listdir(input_file)):
+        files = os.listdir(input_file)
+        if llist != None:
+            files = ['chunk_'+str(x)+'.csv' for x in llist if 'chunk_'+str(x)+'.csv' in files]
+        for num,ifile in enumerate(files):
             if ifile.startswith('chunk_'):
                 logging.info('1. Loading the '+str(num)+'th file: '+str(ifile)+'...')
                 label_df = pd.read_csv(os.path.join(input_file, ifile))
@@ -135,7 +144,9 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
             logging.info("1. Loading chunk: "+str(chunk_id)+' ...')
             for lab in list(chunk[names[labels]].unique()):
                 ### collect data for raw file stats (list of chunks for a given label)
-                if lab not in LABELS:
+                if llist != None and lab not in llist:
+                    continue
+                elif lab not in LABELS:
                     LABELS[lab] = [chunk_id]
                 elif chunk_id not in LABELS[lab]:
                     LABELS[lab].append(chunk_id)
@@ -157,7 +168,7 @@ def create_data_chunks(input_file, labels, ranges, names, chunk_size, chunk_save
                         try:
                             os.makedirs(path, exist_ok=True)
                             outfile = 'chunk_' + str(this_label) + '.csv'
-                            label_df.to_csv(os.path.join(path,outfile), index=False, mode='a', header=not os.path.exists(outfile))
+                            label_df.to_csv(os.path.join(path,outfile), index=False, mode='w', header=not os.path.exists(outfile))
                             logging.info("-- the dataframe saved into the file: "+str(outfile))
                         except:
                             logging.error("-- the dataframe could NOT be saved into the file: "+str(outfile))
@@ -233,6 +244,13 @@ if __name__ == '__main__':
         dest='range',
         type=int,
         required=True
+    )
+    parser.add_argument(
+        '-ll', '--label-list',
+        help='provide custom list of labels to be extracted; default=None means all to be extracted',
+        metavar='llist',
+        dest='llist',
+        default=None
     )
     parser.add_argument(
         '-hd', '--header',
@@ -313,7 +331,7 @@ if __name__ == '__main__':
         print("e.g., minimal required inputs:\n 	python3 bin_data.py -i input_file -l 0 -r 1 \n")
         print("e.g., using raw input file:\n 	python3 bin_data.py -i hybrid.depth -l 0 -r 1 -t 'step' -n 1000 -s True -v 1 \n")
         print("e.g., using directory of chunks:\n 	python3 bin_data.py -i CHUNKS/ -l 0 -r 1 -t 'value' -n 0.15 -s False -v 0 \n")
-        print("e.g., using default settings:\n 	python3 bin_data.py -i {path} -l {int} -r {int} -hd None -ch None -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0 \n")
+        print("e.g., using default settings:\n 	python3 bin_data.py -i {path} -l {int} -r {int} -ll None -hd None -ch None -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0 \n")
         sys.exit(1)
 
     args = parser.parse_args()
@@ -325,4 +343,4 @@ if __name__ == '__main__':
     elif args.verbose == 2:
         logger.setLevel(logging.DEBUG) 
     
-    create_data_chunks(args.input, args.label, args.range, args.header, args.chunks, args.save, args.calc, args.type, args.slice, args.dec, args.out)
+    create_data_chunks(args.input, args.label, args.range, args.llist, args.header, args.chunks, args.save, args.calc, args.type, args.slice, args.dec, args.out)
