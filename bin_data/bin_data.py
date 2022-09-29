@@ -6,10 +6,16 @@ import logging                  # to provide verbosity level
 import pandas as pd		# to easily parse json object and filter out data; require installation with conda or pip
 import numpy as np              # to parse advanced numerical data structures; require installation
 import csv			# to read any column-like text file
+import re                       # to use regular expressions, e.g., to extract numerical part of a string for sorting
 
 
 LABELS = {}
 STATS = {}
+
+
+def natural_sort(s, _re=re.compile(r'(\d+)')):
+    return [int(t) if i & 1 else t.lower() for i, t in enumerate(_re.split(s))]
+
 
 def get_delimiter(filename: str) -> str:
     try:
@@ -50,7 +56,7 @@ def resize_data(label_df, names, labels, ranges, stat, n_split, split_type, deci
         bini['count'] = counts
         bini.insert(0, lr[0], lab)
         bini[nd] = bini[nd].round(decimal)
-        bini[lr[1]] = bini[lr[1]].astype(str).str.replace(', ', '-').str.replace('(','').str.replace(']','')
+        bini[lr[1]] = bini[lr[1]].astype(str).str.replace(', ', '-', regex=False).str.replace('(','', regex=False).str.replace(']','', regex=False)
         return bini
 
     else:
@@ -87,6 +93,7 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
     if os.path.isdir(input_file):
         logging.info('0. Process chunks from the directory...')
         files = os.listdir(input_file)
+        files = sorted(files, key=natural_sort)
         if llist != None:
             files = ['chunk_'+str(x)+'.csv' for x in llist if 'chunk_'+str(x)+'.csv' in files]
         for num,ifile in enumerate(files):
@@ -210,7 +217,9 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
     if not output.endswith('.csv'):
         output = output + '.csv'
     logging.info("4. Saving resized data into the "+str(output)+" file ...")
-    pd.concat(all_bini).sort_values([names[labels], names[ranges]]).to_csv(output, index=False, mode='w', header=not os.path.exists(output))
+    pd.concat(all_bini).to_csv(output, index=False, mode='w', header=not os.path.exists(output))
+#    print(binis[names[labels]].str.extract('(\d+)').astype(int))#######
+#    print(binis[names[ranges]].str.rsplit('-').str[0].astype(float))#######
 
 
 ###-- add options to the argument parser to make it easier to customize and run the script from the command line
