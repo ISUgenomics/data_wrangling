@@ -1,19 +1,45 @@
 # bin_data.py app (python)
 
 ## Overview
-The bin_data.py application is written in Python3 and employes the efficient libabries [pandas and numpy] for operating on complex data structure. The application aggregates observables [by summing or averaging numerical values] over the data slices (rows grouped in a slice). The statistic is calculated separately for each column of numerical values while 'ranges-column' (with the default 'position' header) stores starting position in the slice or range of incremented values.
 
+The bin_data.py application is written in Python3 and employes the efficient libabries [pandas and numpy] for operating on complex data structure. The application **aggregates observables** [by summing or averaging numerical values] over the data slices (rows grouped in a slice). The statistic (**STATS**) is calculated separately for each column of numerical values while **R** = 'ranges-column' can be used to bin data based on the incrementation of values.
+
+Aggregating observables facilitates:
+- coarsening the patterns of observed feature
+- detecting regions/ranges enriched or depleted by the feature
+- assessing the significance threshold of measurred feature
+
+
+## Algorithm
+
+![Bin data app](bin_data.png)<br>
+<i>Figure shows the major steps of the <code>bin_data</code> algorithm.</i><br>
+
+<b>1)</b> The opimal data structure requires:<br>
+<b>L</b> - <code>label-column</code>, column of labels,<br>
+<b>R</b> - <code>ranges-column</code>, numerical [int, float] column of data characteristic (index, position, increment, feature),<br>
+<b>numD</b> - <code>data-columns</code>, any number of numerical columns that will be aggregated.<br>
+
+<b>2)</b> First, data is split into chunks based on assigned category labels (<b>L</b>). Optionally, sing <code>-s 'true'</code> option, chunks can be saved into separate CSV files which facilitates Big Data loading in the repetetive analyses.<br>
+
+<b>3)</b> Next, each <b>L</b>-based data chunk is split into the slices composed of specific number of consequtive rows, typically based on the <b>R</b> column.<br>
 The type of slices can be requested using `-t` option as:
-- **steps**, where the **size of the slice** is user-provided as the number of consequtive data rows
-- **bins**, where the **number of slices** is user-provided
-- **value**, where the slices are cut based on the **increment of the value** in the selected (numerical) 'ranges-column' (use `-r` option to specify column index)
+- **steps**, where the **size of the slice** is user-provided as the number of consequtive data rows (<i>n</i>); the returned output contains <i><code>~N/n</code></i> slices (<i>where N is the number of rows in the input file</i>); rows count in each slice is the same;
+- **bins**, where the **number of slices** is user-provided (<i>n</i>); the returned output contains <i><code>n</code></i> slices; rows count in each slice is the same;
+- **value**, where the slices are cut based on the **increment of the value** in the selected (numerical) <b>R</b> column (use `-r` option to specify <code>'ranges-column'</code> index); the returned output may contain different number of slices (<b>bins</b>) depending on the coarseness of the value increment (<i>n, [int or float]</i>); rows count in each slice can be different, so the additional column <code>'counts'</code> is added into the output to facilitate tracking of empty bins;
 
-The slicing procedure is performed separately for each category (if multiple provided) stored in the 'labels-column', use `-l` option. If the user is interested in selected labels only, they can be provided with the `-ll` option as a one-column file or inline comma-separated string.
+The slicing procedure is performed separately for each category (if multiple provided) stored in the **L** = 'labels-column', use `-l` option. If the user is interested in processing selected labels only, they can be provided with the `-ll` option as a one-column file or inline comma-separated string.<br>
+
+<b>4)</b> Data stored in each numerical column (<b>NumD</b>) is aggregated over the rows in a given slice. So, that in the output the single row of data per slice is returned.<br>
+The user can select column-based <i>summing</i> or <i>averaging</i> as the calculated statistics (<b>STATS</b>) with the option <code>-c</code> followed by string argument <code>'sum'</code> or <code>'ave'</code>, respectively.<br>
+In the output, the **R** = 'ranges-column' (with the default *'position'* header) stores starting position in the slice or range of incremented values.
 
 
 ## Requirements
 
 Requirements: python3, pandas, numpy
+
+<details><summary>Install Python3 on various opertaing systems <i>(if you don't have it yet)</i></summary>
 
 * Python3 - Ubuntu
 
@@ -36,9 +62,10 @@ brew install python3
 * Python3 - Windows
 
 Please follow the instructions provided at [phoenixnap.com](https://phoenixnap.com/kb/how-to-install-python-3-windows)
+</details><br>
 
 
-* Install app requirements
+**Install app requirements**
 
 ```
 pip3 install pandas
@@ -86,26 +113,45 @@ bin_data.py -i input -l label -r range [-ll labels_list] [-hd header_names]
 
 *^ arguments provided in square brackets [] are optional*
 
-* example usage with minimal required options:
+* **example usage with minimal required options:**
 
 ```
 python3 bin_data.py -i input_file -l 0 -r 1
 ```
 
-* example usage with large raw input file:
+*The example parses the single text-like input_file, where the <b>L</b> = 'label-column' has index 0, and <b>R</b> = 'ranges-column' has index 1.*
+
+
+* **example usage with large raw input file:**
 
 ```
 python3 bin_data.py -i hybrid.depth -l 0 -r 1 -t 'step' -n 1000 -s True -v 1
 ```
 
-* example usage with input directory of data chunks in CSV format:
+*The example parses the single text-like hybrid.depth input file, where the <b>L</b> = 'label-column' has index 0, and <b>R</b> = 'ranges-column' has index 1. The 'step' is a selected <b>type</b> of rows grouping, so each slice will be composed of 1000 rows. The data chunks for each unique label will be saved into separate CSV files in the ./CHUNKS directory. The <b>v</b>erbosity level is set to 1, so the 'info' level will be logged.*
+
+* **example usage with input directory of data chunks in CSV format:**
 
 ```
-python3 bin_data.py -i CHUNKS/ -l 0 -r 1 -t 'value' -n 0.15 -s False -v 0
+python3 bin_data.py -i CHUNKS/ -l 0 -r 1 -t 'value' -n 0.15 -s 'false' -v 0
 ```
 
-* example usage with all default settings:
+*The example parses the label-based data chunks stored in the CHUNKS/ directory. All the chunks have the same data structure, where the <b>L</b> = 'label-column' has index 0, and <b>R</b> = 'ranges-column' has index 1. The 'value' is a selected <b>type</b> of rows grouping, so each bin (slice) will be created based on the increment of values in the <b>R</b> = 'ranges-column' by 0.15. The data chunks will not be saved (default when the input is a directory). The <b>v</b>erbosity level is set to 0, so the 'warning' level will be logged while 'info' will be skipped.*
+
+* **example usage with all default settings:**
 
 ```
 python3 bin_data.py -i {path} -l {int} -r {int} -ll None -hd None -ch None -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0
 ```
+
+*The example parses inputs stored on the custom <b>path</b>, where the <b>L</b> = 'label-column' has a given index specified as integer number, and <b>R</b> = 'ranges-column' also has the integer index (in Python starting from 0). The three first arguments are required and have to be user-provided.*<br>
+<i>
+By default:
+- all labels are be parsed with option <code>-ll</code> set to <b>None</b>,
+- if no header in the input file and <b>None</b> provided with option <code>-hd</code>, then 'labels', 'position', and 'val-{int}' will be assigned for 'label-column', 'ranges-column', and all remaming data columns
+- with option <code>-ch None</code> data loading will be optimized to N-row bundles corresponding to 250MB memory of pandas dataframe
+- automatically created label-based chunks will be saved into the ./<code>CHUNKS/</code> directory as separate CSV files; when the input is a directory with data chunks, the option is disabled
+- the data in columns is aggregated by calculating the mean (with <code>-c 'ave'</code> option) over the slice composed of 100 consecutive rows (with <code>-t 'step' -n 100</code> options)
+- the statistics are calculated for all numerical columns with the precision of 2 decimal places (with option <code>-d 2</code> and saved to the 'output_data.csv' file)
+- the verbosity level is set to 0, which means logging the warnings, errors, and critical messages, while skipping the info about the algorithm progress
+</i>
