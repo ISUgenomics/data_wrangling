@@ -117,11 +117,11 @@ optional arguments:
 ## Example usage
 
 ```
-bin_data.py -i input -l label -r range [-ll labels_list] [-hd header_names]
-            [-ch chunks_size] [-s {true,false}]
-            [-c {ave,sum}] [-t {step,bin,value}] [-n slice]
-            [-d dec] [-o out]
-            [-v [VERBOSE]] [-h]
+python3 bin_data.py -i input -l label -r range [-ll labels_list] [-hd header_names]
+                   [-ch chunks_size] [-s {true,false}]
+                   [-c {ave,sum}] [-t {step,bin,value}] [-n slice]
+                   [-d dec] [-o out]
+                   [-v [VERBOSE]] [-h]
 ```
 
 *^ arguments provided in square brackets [] are optional*
