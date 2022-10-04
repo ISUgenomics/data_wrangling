@@ -106,11 +106,11 @@ optional arguments:
 -hd None                # means: assigning 'label' for labels-col, 'position' for ranges-col, and 'val-X' for remaining columns, where X is an increasing int number
 -ch None                # means: optimizing number of loaded input rows for 250MB memory usage
 -s 'true'               # means: data chunked by unique labels will be saved in CSV format into the CHUNKS/ directory; disabled when input is a directory
--c 'ave'                # means: average of each column in the slice will be returned
+-c 'ave'                # means: average of each numerical column in the slice will be returned
 -t 'step'               # means: data will be sliced by the number of rows in a slice (each slice consists of the same number of rows)
 -n 100                  # means: (-t 'step') the slice will be composed of 100 rows or (-t 'bin') there will be 100 slices in total or (-t 'value') the increment for slicing will be 100
 -d 2                    # means: 2 decimal places will be kept for all numeric columns
--o 'output_data'        # means: that the resized output data will be saved as 'output_data.csv' file
+-o 'output_data'        # means: the output will be saved as 'output_data.csv' file
 ```
 
 
