@@ -89,15 +89,28 @@ required arguments:
 
 optional arguments:
 ```
-  -ll llist,  --label-list llist        # [path] or [comma-separated list] provide custom list of labels to be extracted; [default: None] means all to be extracted
-  -hd header, --header header           # [list]            provide custom list of columns names (header); [default: None] means assigning 'label' for labels-col, 'position' for ranges-col, and 'val-X' for remaining columns, where X is an increasing int number
-  -ch chunks, --chunk-size chunks       # [int]             provide custom size of chunks (number of rows loaded at once); [default: None] means optimizing number of rows for 250MB memory usage
-  -s save,    --chunk-save save         # {true,false}      saves data into chunked files; [default: true] means data chunked by unique labels will be saved in CSV format into the CHUNKS/ directory
-  -c calc,    --calc-stats calc         # {ave,sum}         select resizing opeartion: ave (mean) or sum; [default: 'ave'] means average of each column in the slice will be returned
-  -t type,    --slice-type type         # {step,bin,value}  select type of slicing: step (number of rows in a slice) or bin (number of slices) or value (value increment in ranges-col); [default: 'step'] means data will be sliced by the number of rows in a slice (each slice consists of the same number of rows)
-  -n slice,   --slice-size slice        # [float]           select size/increment of slicing; [default: 100] means the slice will be composed of 100 rows or there will be 100 slices in total or the increment for slicing will be 100
-  -d dec,     --decimal-out dec         # [int]             provide decimal places for numerical outputs; [default: 2] means 2 decimal places will be kept for all numeric columns
-  -o out,     --output out              # [string]          provide custom output filename; [default: 'output_data'] means that the resized output data will be saved as 'output_data.csv' file
+  -ll llist,  --label-list llist        # [path] or [comma-separated list] provide custom list of labels to be processed
+  -hd header, --header header           # [list]            provide custom ordered list of columns names (header)
+  -ch chunks, --chunk-size chunks       # [int]             provide custom size of chunks (number of rows loaded at once)
+  -s save,    --chunk-save save         # {true,false}      saves data into chunked files
+  -c calc,    --calc-stats calc         # {ave,sum}         select resizing operation: ave (mean) or sum
+  -t type,    --slice-type type         # {step,bin,value}  select type of slicing: 'step' (number of rows in a slice) or 'bin' (number of slices) or 'value' (value increment in ranges-col)
+  -n slice,   --slice-size slice        # [float]           select size/increment of slicing
+  -d dec,     --decimal-out dec         # [int]             provide decimal places for numerical outputs
+  -o out,     --output out              # [string]          provide custom output filename
+```
+
+*defaults for optional arguments:*
+```
+-ll None                # means: all labels will be processed
+-hd None                # means: assigning 'label' for labels-col, 'position' for ranges-col, and 'val-X' for remaining columns, where X is an increasing int number
+-ch None                # means: optimizing number of loaded input rows for 250MB memory usage
+-s 'true'               # means: data chunked by unique labels will be saved in CSV format into the CHUNKS/ directory; disabled when input is a directory
+-c 'ave'                # means: average of each column in the slice will be returned
+-t 'step'               # means: data will be sliced by the number of rows in a slice (each slice consists of the same number of rows)
+-n 100                  # means: (-t 'step') the slice will be composed of 100 rows or (-t 'bin') there will be 100 slices in total or (-t 'value') the increment for slicing will be 100
+-d 2                    # means: 2 decimal places will be kept for all numeric columns
+-o 'output_data'        # means: that the resized output data will be saved as 'output_data.csv' file
 ```
 
 
