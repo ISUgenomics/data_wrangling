@@ -97,9 +97,9 @@ optional arguments:
 ## Example usage
 
 ```
-data_matcher.py -i file1 -m file2 -c cols
-                [-e missing] [-o outfile] [-f format]
-                [-h]
+python3 merge_data.py -i file1 -m file2 -c cols
+                     [-e missing] [-o outfile] [-f format]
+                     [-h]
 ```
 
 *^ arguments provided in square brackets [] are optional*
