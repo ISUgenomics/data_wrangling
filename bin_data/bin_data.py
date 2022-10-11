@@ -115,7 +115,7 @@ def concat_label_chunks(this_label, all_data, ranges, chunk_save):
     # sort dataframe by ascending values in ranges column
     try:
         label_df = label_df.sort_values(by=ranges, ascending=True)
-        logging.info("-- the dataframe is sort ascending by ranges column: "+str(names[ranges]))
+        logging.info("-- the dataframe is sort ascending by ranges column: "+str(ranges))
     except:
         logging.warning("-- kept original order since ranges column was not specified!")
                     
@@ -128,11 +128,6 @@ def concat_label_chunks(this_label, all_data, ranges, chunk_save):
 
 def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chunk_save, stat, split_type, n_split, decimal, output):
     """Split Big Data into the memory-affordable chunks and resize content by mean or sum of customized split size (n-bins or n-long step)."""
-
-    if ranges.isdigit():
-        ranges = int(ranges)
-    if labels.isdigit():
-        labels = int(labels)
 
     all_bini = []	# list of all resized df grouped by labels
     if llist != '':
@@ -197,28 +192,15 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
                     pass
         logging.info('--The assigned data header is: '+str(names))
 
-        # When labels arg is None, create chunks based on row counts
         chunk_id = 1
-        if labels == '':
-            file_size = os.path.getsize(input_file)
-            if split_type == 'step':	# n rows in a slice
-                chunk_size = n_split
-            elif split_type == 'bin':	# n slices
-                chunk_size = np.ceil(file_size / n_split)
-            for chunk in pd.read_csv(input_file, chunksize=chunk_size, sep=sep, index_col=None, header=header, names=names):
-                logging.info("1. Loading chunk: "+str(chunk_id)+' ...') 
-                save_chunks(chunk, chunk_id)
-            sys.exit("Data chunks were successfully saved in the CHUNKS directory.")
-
-        else:
         # Optimize memory use when chunk size is NOT user-provided        
-            if chunk_size == 0:                                       # optimize memory use to 250MB/chunk
-                chunk = pd.read_csv(input_file, nrows=1000, sep=sep)     # read col-separated data sample
-                mem = round(chunk.memory_usage(deep=True).sum()/1024,0)  # estimate mem [kB] for col-separated data
-                chunk_size = round(250000/mem)*1000
-                logging.info('--The optimized data chunk contains: '+str(chunk_size)+' rows of '+str(mem)+'kB in total.')
-            else:
-                logging.info('--You requested data chunks of '+str(chunk_size)+' rows each.')
+        if chunk_size == 0:                                       # optimize memory use to 250MB/chunk
+            chunk = pd.read_csv(input_file, nrows=1000, sep=sep)     # read col-separated data sample
+            mem = round(chunk.memory_usage(deep=True).sum()/1024,0)  # estimate mem [kB] for col-separated data
+            chunk_size = round(250000/mem)*1000
+            logging.info('--The optimized data chunk contains: '+str(chunk_size)+' rows of '+str(mem)+'kB in total.')
+        else:
+            logging.info('--You requested data chunks of '+str(chunk_size)+' rows each.')
 
         # Parse data
         all_data = []						     # list of all matching df chunks
@@ -228,7 +210,6 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
         for chunk in pd.read_csv(input_file, chunksize=chunk_size, sep=sep, index_col=None, header=header, names=names):
             logging.info("1. Loading chunk: "+str(chunk_id)+' ...')            
             for lab in list(chunk[names[labels]].unique()):
-                print(lab)##########
                 ### collect data for raw file stats (list of chunks for a given label)
                 if llist != '' and lab not in llist:
                     continue
@@ -250,28 +231,15 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
                     except:
                          r = ''
                     label_df = concat_label_chunks(this_label, all_data, r, chunk_save)
-#                    label_df = pd.concat(all_data)  # merge chunks with data for a given label
-#                    mem2 = round(label_df.memory_usage(deep=True).sum()/1024/1024,2)
-#                    STATS[this_label] = [len(label_df), str(mem2)+'MB']
-#                    logging.info("-- the dataframe size is: "+str(len(label_df))+' rows and '+str(mem2)+'MB')
-#
-#                    # sort dataframe by ascending values in ranges column
-#                    try:
-#                        label_df = label_df.sort_values(by=names[ranges], ascending=True)
-#                        logging.info("-- the dataframe is sort ascending by ranges column: "+str(names[ranges]))
-#                    except:
-#                        logging.warning("-- kept original order since ranges column was not specified!")
-#                    
-#                    # save data chunks in the ./CHUNKS directory
-#                    if chunk_save == 'true':
-#                        save_chunks(label_df, this_label)
     
                     # bin data for a given label
-                    if ranges.isdigit():
+                    try:
                         logging.info("3. Resizing dataframe for a label: "+str(this_label)+'...')
                         bini = resize_data(label_df, names, labels, ranges, stat, n_split, split_type, decimal)
                         logging.info("-- a new dataframe size is: "+str(len(bini))+' rows, resized by '+str(stat)+' on '+str(n_split)+' '+str(split_type)+'s')
                         all_bini.append(bini)
+                    except:
+                        logging.error("ERROR: Aggregating data over slices has failed!")
 
                     # begin cycle for next label
                     this_label = lab
@@ -281,11 +249,10 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
             chunk_id+=1
         # bin data for the last label
         label_df = concat_label_chunks(this_label, all_data, r, chunk_save)
-        if ranges.isdigit():
-            logging.info("3. Resizing dataframe for a label: "+str(this_label)+'...')
-            bini = resize_data(label_df, names, labels, ranges, stat, n_split, split_type, decimal)
-            logging.info("-- a new dataframe size is: "+str(len(bini))+' rows, resized by '+str(stat)+' on '+str(n_split)+' '+str(split_type)+'s')
-            all_bini.append(bini)
+        logging.info("3. Resizing dataframe for a label: "+str(this_label)+'...')
+        bini = resize_data(label_df, names, labels, ranges, stat, n_split, split_type, decimal)
+        logging.info("-- a new dataframe size is: "+str(len(bini))+' rows, resized by '+str(stat)+' on '+str(n_split)+' '+str(split_type)+'s')
+        all_bini.append(bini)
         
         try:
             logging.info("Saving statistics of a raw file into the label_in_chunks.txt ...")
@@ -329,6 +296,7 @@ if __name__ == '__main__':
         help='[string] input multi-col file or directory with data chunks',
         metavar='input',
         dest='input',
+        type=str,
         required=True
     )
     parser.add_argument(
@@ -336,6 +304,7 @@ if __name__ == '__main__':
         help='[int] index of column with labels used to chunk data',
         metavar='label',
         dest='label',
+        type=int,
         required=True
     )
     parser.add_argument(
@@ -343,6 +312,7 @@ if __name__ == '__main__':
         help='[int] index of column with ranges used to slice data',
         metavar='range',
         dest='range',
+        type=int,
         required=True
     )
     parser.add_argument(
@@ -431,7 +401,7 @@ if __name__ == '__main__':
         print("e.g., minimal required inputs:\n 	python3 bin_data.py -i input_file -l 0 -r 1 \n")
         print("e.g., using raw input file:\n 	python3 bin_data.py -i hybrid.depth -l 0 -r 1 -t 'step' -n 1000 -s True -v 1 \n")
         print("e.g., using directory of chunks:\n 	python3 bin_data.py -i CHUNKS/ -l 0 -r 1 -t 'value' -n 0.15 -s False -v 0 \n")
-        print("e.g., using default settings:\n 	python3 bin_data.py -i {path} -l {int} -r {int} -ll None -hd None -ch None -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0 \n")
+        print("e.g., using default settings:\n 	python3 bin_data.py -i {path} -l {int} -r {int} -ll None -hd None -ch 0 -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0 \n")
         sys.exit(1)
 
     args = parser.parse_args()
