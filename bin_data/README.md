@@ -90,7 +90,7 @@ required arguments:
 optional arguments:
 ```
   -ll llist,  --label-list llist        # [path] or [comma-separated list] provide custom list of labels to be processed
-  -hd header, --header header           # [list]            provide custom ordered list of columns names (header)
+  -hd header, --header header           # [list]            provide custom, ordered, comma-separated list of columns names (header)
   -ch chunks, --chunk-size chunks       # [int]             provide custom size of chunks (number of rows loaded at once)
   -s save,    --chunk-save save         # {true,false}      saves data into chunked files
   -c calc,    --calc-stats calc         # {ave,sum}         select resizing operation: ave (mean) or sum
@@ -102,9 +102,9 @@ optional arguments:
 
 *defaults for optional arguments:*
 ```
--ll None                # means: all labels will be processed
--hd None                # means: assigning 'label' for labels-col, 'position' for ranges-col, and 'val-X' for remaining columns, where X is an increasing int number
--ch None                # means: optimizing number of loaded input rows for 250MB memory usage
+-ll ''                  # means: all labels will be processed
+-hd ''                  # means: assigning 'label' for labels-col, 'position' for ranges-col, and 'val-X' for remaining columns, where X is an increasing int number
+-ch 0                # means: optimizing number of loaded input rows for 250MB memory usage
 -s 'true'               # means: data chunked by unique labels will be saved in CSV format into the CHUNKS/ directory; disabled when input is a directory
 -c 'ave'                # means: average of each numerical column in the slice will be returned
 -t 'step'               # means: data will be sliced by the number of rows in a slice (each slice consists of the same number of rows)
@@ -154,7 +154,7 @@ python3 bin_data.py -i CHUNKS/ -l 0 -r 1 -t 'value' -n 0.15 -s 'false' -v 0
 * **example usage with all default settings:**
 
 ```
-python3 bin_data.py -i {path} -l {int} -r {int} -ll None -hd None -ch None -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0
+python3 bin_data.py -i {path} -l {int} -r {int} -ll '' -hd '' -ch 0 -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0
 ```
 
 *The example parses inputs stored on the custom <b>path</b>, where the <b>L</b> = 'label-column' has a given index specified as an integer number, and <b>R</b> = 'ranges-column' also has the integer index (in Python, an indexing starts from 0). The three first arguments are required and have to be user-provided.*<br>

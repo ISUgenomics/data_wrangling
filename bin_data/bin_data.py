@@ -32,7 +32,7 @@ def identify_header(filename, sep, n=10, th=0.9):
         df2 = pd.read_csv(filename, sep=sep, header=None, nrows=n)
         sim = (df1.dtypes.values == df2.dtypes.values).mean()
         cols = len(df1.columns)
-        return ['infer', df1.columns] if sim < th else [None, cols]
+        return ['infer', list(df1.columns)] if sim < th else [None, cols]
     except:
         logging.error('Identifying data header has failed!')
 
@@ -128,7 +128,7 @@ def concat_label_chunks(this_label, all_data, ranges, chunk_save):
 
 def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chunk_save, stat, split_type, n_split, decimal, output):
     """Split Big Data into the memory-affordable chunks and resize content by mean or sum of customized split size (n-bins or n-long step)."""
-
+    
     all_bini = []	# list of all resized df grouped by labels
     if llist != '':
         if os.path.isfile(llist):
@@ -172,15 +172,25 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
 
         # Specify data header (if it exists) 
         header = None
-        head = identify_header('chunk.csv', sep=sep)                    
-        if names != None and len(names) == head[1]:
-            if head[0] == 'infer':
-                header = 0
-        else:
-            if head[0] == 'infer':
-                header = 0
-                names = head[1]
+        head = identify_header('chunk.csv', sep=sep)
+        if len(names) != 0:				     	# use the user-provided header
+            names = names.split(',')
+            if isinstance(head[1], int):
+                if len(names) < head[1]:				## if user list is too short, append generic header
+                    for i in range(head[1] - len(names)):
+                        names.append("val-"+str(i))
             else:
+                k = len(head[1])
+                if len(names) < k:				## if user list is too short, append original
+                    for i in range(k - len(names),0, -1):
+                        names.append(head[1][-i])
+            if head[0] == 'infer':
+                header = 0
+        else:							# keep the original header
+            if head[0] == 'infer':
+                header = 0
+                names = list(head[1])
+            else:						# assign the default column names
                 names = ['val-'+str(i) for i in range(head[1])]
                 try:
                     names[ranges] = 'position'
@@ -226,11 +236,7 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
                 elif this_label == lab:		# append all label-matching rows from the chunk
                     all_data.append(chunk.loc[chunk[names[labels]] == this_label])
                 else:                               # resize data for this_label and begin cycle for next label
-                    try:
-                         r = names[ranges]
-                    except:
-                         r = ''
-                    label_df = concat_label_chunks(this_label, all_data, r, chunk_save)
+                    label_df = concat_label_chunks(this_label, all_data, names[ranges], chunk_save)
     
                     # bin data for a given label
                     try:
@@ -248,7 +254,7 @@ def create_data_chunks(input_file, labels, ranges, llist, names, chunk_size, chu
                     all_data.append(chunk.loc[chunk[names[labels]] == this_label])
             chunk_id+=1
         # bin data for the last label
-        label_df = concat_label_chunks(this_label, all_data, r, chunk_save)
+        label_df = concat_label_chunks(this_label, all_data, names[ranges], chunk_save)
         logging.info("3. Resizing dataframe for a label: "+str(this_label)+'...')
         bini = resize_data(label_df, names, labels, ranges, stat, n_split, split_type, decimal)
         logging.info("-- a new dataframe size is: "+str(len(bini))+' rows, resized by '+str(stat)+' on '+str(n_split)+' '+str(split_type)+'s')
@@ -324,11 +330,11 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-hd', '--header',
-        help='provide custom list of columns names (header)',
+        help='provide custom list of columns names (header); [comma-separated string]',
         metavar='header',
         dest='header',
-        default=[],
-        type=list
+        default='',
+        type=str
     )
     parser.add_argument(
         '-ch', '--chunk-size',
@@ -401,7 +407,7 @@ if __name__ == '__main__':
         print("e.g., minimal required inputs:\n 	python3 bin_data.py -i input_file -l 0 -r 1 \n")
         print("e.g., using raw input file:\n 	python3 bin_data.py -i hybrid.depth -l 0 -r 1 -t 'step' -n 1000 -s True -v 1 \n")
         print("e.g., using directory of chunks:\n 	python3 bin_data.py -i CHUNKS/ -l 0 -r 1 -t 'value' -n 0.15 -s False -v 0 \n")
-        print("e.g., using default settings:\n 	python3 bin_data.py -i {path} -l {int} -r {int} -ll None -hd None -ch 0 -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0 \n")
+        print("e.g., using default settings:\n 	python3 bin_data.py -i {path} -l {int} -r {int} -ll '' -hd '' -ch 0 -s True -c 'ave' -t 'step' -n 100 -d 2 -o 'output_data' -v 0 \n")
         sys.exit(1)
 
     args = parser.parse_args()
