@@ -2,7 +2,7 @@
 
 ## Overview
 
-The bin_data.py application is written in Python3 and employs efficient libraries [pandas and numpy] for operating on a complex data structure. The application **aggregates observables** [by summing or averaging numerical values] over the data slices (rows grouped in a slice). The statistic (**STATS**) is calculated separately for each column of numerical values, while **R** = 'ranges-column' can be used to bin data based on the incrementation of values.
+The **bin_data.py** application is written in Python3 and employs efficient libraries [pandas and numpy] for operating on a complex data structure. The application **aggregates observables** [by summing or averaging numerical values] over the data slices (rows grouped in a slice). The statistic (**STATS**) is calculated separately for each column of numerical values, while **R** = 'ranges-column' can be used to bin data based on the incrementation of values.
 
 Aggregating observables facilitates:
 - coarsening the patterns of observed feature
@@ -45,7 +45,7 @@ Requirements: python3, pandas, numpy
 
 ```
 sudo apt-get update
-$ sudo apt-get install python3.
+$ sudo apt-get install python3
 ```
 
 * Python3 - macOS
