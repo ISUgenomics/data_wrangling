@@ -1,17 +1,34 @@
-# assign_colors.py app (python)
+# Overview
 
-## Overview
-
-The **assign_colors** applications are written in Python3 and employ  efficient libraries [pandas and numpy] for operating on a complex data structure. The application **assigns colors** to value ranges/intervals. There are various variants of value-to-color mapping possible to set up by a combination of available options.
-
+The **value-to-color mapping** applications are written in Python3 and employ  efficient libraries [pandas and numpy] for operating on a complex data structure. The application **assigns colors** to value ranges/intervals. There are various variants of value-to-color mapping possible to set up by a combination of available options.
 
 Value-to-color mapping facilitates:
 - meaningful visualization of the results
 - detecting regions/ranges enriched or depleted by the feature
 
 
+# (1) assign_colors.py app (python)
+
+
+
+# (2) convert_for_ideogram.py app (python)
+
 ## Algorithm
 
+<b>The numerical values (from selected columns) are replaced by the corresponding discrete colors. </b>
+
+![](ideogram_convert_data.png)
+
+First, we find the minimum, maximum, mean, median, and standard deviation over the data set. Minimum and maximum determine the range of values mapped to the color scale. The center of the color scale can be a **metric**: *mean*, *median*, or *half of the maximum* value. The number of colors in the color scale and distribution of values assigned to them is customizable. <br>
+By default, the 3-color scale: [1] *light gray* - [2] *gray* - [3] *black* is used, and the value thresholds between colors depends on the standard deviation `[1] < metric - std < [2] < metric + std < [3]`. <br>
+If different value intervals are needed, they must be a comma-separated list of metric multipliers [M]. For example, "0.2,0.4,0.6,0.8,1.0" will create five value intervals: `[1] < 0.2 * metric < [2] < 0.4 * metric < [3] < 0.6 * metric < [4] < 0.8 * metric < [5] < 1.0 * metric` (*metric: mean, median, or half of the maximum*). When the number of provided multipliers is higher than 3, the built-in 9-color scale will be used (7 gray shades + pink + purple pattern). The **default 3- and 9-color scales** are intended for generating input file for **ideogram-JS** visualization.
+
+![](built-in_color-scales.png)
+
+ If you want to apply a **custom color scale**, the **ideogram-plotly** visualization app should be used instead. Then you can provide a comma-separated list of HEX colors (e.g., "#000000,#f6c5c5,#e66969,#d60c0c,#970000,#660000,#300000" for white - red - maroon shades). <br>
+ Note the number and order of metric multipliers should match the number and order of colors (e.g., "0.25,0.5,0.75,1.0,1.25,1.5,2.0" multipliers for the red-shades color scale and half-max as a metric).
+
+ ![](custom_color-scales.png)
 
 ## Requirements
 
@@ -77,7 +94,8 @@ python3 convert_for_ideogram.py -i input -l label -r range
 *^ arguments provided in square brackets [] are optional*
 
 
-* **example usage with minimal required options:**
+### **[1] example usage with minimal required options**
+* <i> generates inputs for the <b>ideogram-JS</b> visualization app</i>
 
 preview of the `input_file.csv`
 ```
@@ -226,7 +244,8 @@ In addition, the standard output is displayed on the screen (*can be redirected 
  9  HiC_scaffold_10   3.437   3.040  1.005  1.683   3.859   3.440  1.107  2.612
 ```
 
-* **example usage of value-to-color mapping for selected [numerical] column:**
+### **[2] example usage of value-to-color mapping for selected [numerical] column:**
+* <i> generates inputs for the <b>ideogram-JS</b> visualization app</i>
 
 ```
 python3 convert_for_ideogram.py -i input_file.csv -l 0 -r 1 -v 2 -m 'median' -t 'column' -s 'std' > stats_2
@@ -273,7 +292,8 @@ python3 convert_for_ideogram.py -i input_file.csv -l 0 -r 1 -v 2 -m 'median' -t 
 ```
 
 
-* **example usage with custom value-to-color mapping intervals:**
+### **[3] example usage with custom value-to-color mapping intervals:**
+* <i> generates inputs for the <b>ideogram-JS</b> visualization app</i>
 
 ```
 python3 convert_for_ideogram.py -i input_file.csv -l 0 -r 1 -v 2,3,6,7 -m 'max' -t 'row' -s 0.25,0.5,0.75,1.0,1.25,1.5,2.0
@@ -311,4 +331,47 @@ python3 convert_for_ideogram.py -i input_file.csv -l 0 -r 1 -v 2,3,6,7 -m 'max' 
    "10-i3 p p10-50 40436.0 50436.0 40436.0 50436.0 gneg",
    "10-i6 p p10-50 40436.0 50436.0 40436.0 50436.0 gneg",
    "10-i7 p p10-50 40436.0 50436.0 40436.0 50436.0 gneg"]}
+```
+
+### **[4] example usage with custom colorscale:**
+* <i> generates inputs for the <b>ideogram-plotly</b> visualization app</i>
+
+```
+python3 convert_for_ideogram.py -i input_file.csv -l 0 -r 1 -v 2,3,6,7 -m 'max' -t 'row' -s 0.25,0.5,0.75,1.0,1.25,1.5,2.0 -cs "#000000,#f6c5c5,#e66969,#d60c0c,#970000,#660000,#300000"
+```
+
+<i>In this example, the value-to-color mapping is calculated for several numerical columns [<b>indexes: 2, 3, 6, 7</b>] (note indexing in python starts from 0). We use the same custom schema of value intervals (with option -s) as in the previous example. <b>Half of the maximum</b> value in the data row is the reference for the value-to-color mapping. In this example, the 'row' mapping type means that for each chromosome, we find the maximum value across individuals. Half of the maximum is used as a metric multiplied by user-adjusted factors. So, in this example, the multiplier 1.0 corresponds to the half-max, and 2.0 corresponds to the maximum. We provided seven multipliers, so the customized color scale also should be made up of 7 colors. You can use HEX notation (e.g., #000000 for white) or standard HTML color names (e.g., white, red, blue, etc.).</i>
+
+`data-val-2.json`
+```
+{"chrBands":
+  [
+   "1 p p1-0 982.0 10982.0 982.0 10982.0 #f6c5c5",
+   "1 p p1-1 10982.0 20982.0 10982.0 20982.0 #f6c5c5",
+   "1 p p1-2 20982.0 30982.0 20982.0 30982.0 #000000",
+   "1 p p1-3 30982.0 40982.0 30982.0 40982.0 #f6c5c5",
+   "1 p p1-4 40982.0 50982.0 40982.0 50982.0 #e66969",
+   "1 p p1-5 50982.0 60982.0 50982.0 60982.0 #000000",
+   "1 p p1-6 60982.0 70982.0 60982.0 70982.0 #d60c0c",
+   "1 p p1-7 70982.0 80982.0 70982.0 80982.0 #300000",
+   ...
+  ]
+}
+```
+
+`merge.json`
+```
+{"chrBands":
+  [
+   "1-i2 p p1-0 982.0 10982.0 982.0 10982.0 #f6c5c5",
+   "1-i3 p p1-0 982.0 10982.0 982.0 10982.0 #f6c5c5",
+   "1-i6 p p1-0 982.0 10982.0 982.0 10982.0 #000000",
+   "1-i7 p p1-0 982.0 10982.0 982.0 10982.0 #f6c5c5",
+   ...
+   "10-i2 p p10-50 40436.0 50436.0 40436.0 50436.0 #000000",
+   "10-i3 p p10-50 40436.0 50436.0 40436.0 50436.0 #000000",
+   "10-i6 p p10-50 40436.0 50436.0 40436.0 50436.0 #000000",
+   "10-i7 p p10-50 40436.0 50436.0 40436.0 50436.0 #000000"
+  ]
+}
 ```
