@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-#import os                       # to manage paths
 import sys                      # to manage inline arguments
 import argparse                 # to convert python script into program with options
+import logging			# to provide verbosity level
 import pandas as pd             # to easily parse json object and filter out data; require installation with conda or pip
 import numpy as np              # to parse advanced numerical data structures; require installation
-#import re                       # to use regular expressions
-#import json                     # to save data into json format
-import logging
-from colorsys import hls_to_rgb # to generate color scales
+from colorsys import hls_to_rgb # to generate various color scales
+import PIL
+from PIL import Image, ImageDraw
 
 
 numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -19,7 +18,7 @@ HLS = {'red': 0, 'vermilion': 0.5, 'orange': 1, 'golden': 1.5, 'yellow': 2,
        'reddish_purple': 10.5, 'crimson': 11, 'carmine': 11.5}
 
 
-def generate_colorscale(c=0, t='full', n=12, l=0.5, s=1.0, a=0.9, h='true'):
+def generate_colorscale(c=0, t='full', n=12, l=0.5, s=1.0, a=0.9, h='true', r='false'):
     """Returns dictionary of indexed colors (rgba or hex)"""
     if c == 0 :
         if t == 'full':		# rainbow color scale
@@ -42,19 +41,22 @@ def generate_colorscale(c=0, t='full', n=12, l=0.5, s=1.0, a=0.9, h='true'):
             except:
                 print("ERROR: user-provided values are not a list of floats in range 0-12")
 
+    if r == 'true':
+        rgba_colors.reverse()
     if h == 'true':	# HEX colors
-        rgba_colors = [ '#{:02x}{:02x}{:02x}'.format(*color) for color in rgba_colors ]
+        colors = [ '#{:02x}{:02x}{:02x}'.format(*color) for color in rgba_colors ]
     else:		# RGBA colors
-        rgba_colors = ['rgba'+str(color) for color in rgba_colors]
+        colors = ['rgba'+str(color) for color in rgba_colors]
 
-    return { n : i for n, i in enumerate(rgba_colors) }
+    return { n : i for n, i in enumerate(colors) }, rgba_colors
 
 
-def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true", input_file='', labels='', values='', measure='mean', mtype='cell', step='std'):
+def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true,false", input_file='', labels='', values='', measure='mean', mtype='cell', step='std'):
     """Generate color scale and perform value-to-color mapping"""
 
     # PREPARE COLOR SCALE (using cs argument)
     CS = []
+    rgba = []
     csp = cs_params.strip().replace(' ', '').split(',')
     
     if input_file != '' and  step != "std":
@@ -68,18 +70,28 @@ def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true", input_file='', labe
             if tmp_cs[0].startswith('#') or tmp_cs[0].startswith('rgb'):	# ready-made user-provided color scale
                 CS = {num : color for num,color in tmp_cs}
             else:								# list of standard colors or equivalent floats
-                CS = generate_colorscale(1, tmp_cs, len(tmp_cs), float(csp[1]), float(csp[2]), float(csp[3]), str(csp[4]))
+                CS, rgba = generate_colorscale(1, tmp_cs, len(tmp_cs), float(csp[1]), float(csp[2]), float(csp[3]), str(csp[4]), str(csp[5]))
         else:									# automatically generated colorscale
-            CS = generate_colorscale(0, tmp_cs[0], int(csp[0]), float(csp[1]), float(csp[2]), float(csp[3]), str(csp[4]))
+            CS, rgba = generate_colorscale(0, tmp_cs[0], int(csp[0]), float(csp[1]), float(csp[2]), float(csp[3]), str(csp[4]), str(csp[5]))
     except:
         logging.error('Creating color scale has failed!')
 
-    if input_file == '':
-        print("COLOR SCALE: " + str(list(CS.values())))
-        sys.exit(1)
+    if len(rgba):
+        n = len(rgba)
+        w = 160					# width of a single color on the color scale
+        img=Image.new("RGBA", ((n*w)+20, 160),(255,255,255))
+        draw = ImageDraw.Draw(img)
+        for num,i in enumerate(rgba):
+            j = list(i)
+            j[3] = int(i[3] * 255)		# convert color alpha to 1-255 range
+            p1 = ((w*num)+10,10)
+            shape = [p1, (p1[0]+w,150)]		# [(x0,y0),(x1,y1)]
+            draw.rectangle(shape, fill=tuple(j), outline="black")
+        img.save("cs.png")    
 
-    # PREPARE VALUE-TO-COLOR MAPPING MATRIX
-    color_dict = {}
+    print("COLOR SCALE: " + str(list(CS.values())))
+    if input_file == '':
+        sys.exit(1)
 
 
     # LOAD INPUT DATA
@@ -139,6 +151,9 @@ def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true", input_file='', labe
     print("\n#-STDV IN GROUPS:\n", stdv_tab)
     stdv_tab.set_index('label', inplace=True)
 
+
+    # PREPARE VALUE-TO-COLOR MAPPING MATRIX
+    color_dict = {}
 
     ### - color scale related to reference value for each group/label/row [l] (mixed individuals for given label)
     if mtype == "row":
@@ -260,17 +275,17 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-cs', '--colorscale',
-        help="provide custom colorscale: comma-separated list of hex colors (e.g., #FFFFFF,#a6a6a6,#000000 set up the white-gray-black scale)",
+        help="select colorscale type: provide pre-defined keyword (e.g., 'full', 'grey') or comma-separated list of colors (learn more from the docs)",
         dest='cs',
         type=str,
         default='grey'
     )
     parser.add_argument(
         '-csp', '--colorscale-params',
-        help="provide custom colorscale: comma-separated list of hex colors (e.g., #FFFFFF,#a6a6a6,#000000 set up the white-gray-black scale)",
+        help="adjust custom colorscale: comma-separated list of 6 parameters in order (1) number of colors, (2) color lightness, (3) color saturation, (4) color transparency, (5) whether to convert colors to HEX notation, (6) reverse color scale order",
         dest='csp',
         type=str,
-        default="3,0.5,1.0,0.9,true"
+        default="3,0.5,1.0,0.9,true,false"
     )
     parser.add_argument(
         '-i', '--data-source',
@@ -318,13 +333,12 @@ if __name__ == '__main__':
 
 
 ###-- print example of usage and help message when script is run without required arguments
-    if len(sys.argv) < 1:
+    if len(sys.argv) < 2:
         parser.print_help()
         print("\nUSAGE:\n")
         print("e.g., minimal required inputs:\n         python3 assign_colors.py")
         print("e.g., create custom color scale only:\n         python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true'")
         print("e.g., value-to-color mapping with the default grey scale:\n         python3 assign_colors.py -i input_file.csv -l 0")
-        sys.exit(1)
 
     args = parser.parse_args()
     assign_colors(args.cs, args.csp, args.input, args.label, args.vals, args.measure, args.mtype, args.step)
