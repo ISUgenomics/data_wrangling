@@ -6,8 +6,289 @@ Value-to-color mapping facilitates:
 - meaningful visualization of the results
 - detecting regions/ranges enriched or depleted by the feature
 
+## Algorithm
+
+<b>The numerical values (from selected columns) are replaced by the corresponding discrete colors. </b>
+
+![](assets/ideogram_convert_data.png)
+
+### Variants of value-to-color mapping
+
+To convert numerical values into colors, some premises must be made. For example, decide whether the **range of values** will be determined for each column separately or whether you collect all numerical results into a single pool. You must also decide what **statistical metric** will be your reference for sizing intervals on the color scale. Of course, the answers to these questions can strongly depend on the **type of data**. Thus, the application has a set of options that give a lot of freedom in this regard.
+
+**First, specify a range of values** <br>
+`-t {glob,column,row,cell}` <br>
+Looking at your data, decide whether you want to operate on a unified pool of values from the entire matrix [`glob`], or whether you need separate subsets for unique labels in rows [`row`] or traits in columns [`column`] or label-trait pairs [`cell`].
+
+![](assets/value_range_variants.png)
+
+**Then, select statistical metric as a reference for the center of the color scale** <br>
+`-m {max,mean,median}` <br>
+The algorithm finds the minimum, maximum, mean, and standard deviation values for the selected type of data grouping (*see previous step*). All statistics are print on the standard output for future reference (*if needed*). The user-selected metric (**mean, median, or half-max**) is assigned to the color corresponding to the center of the color scale. Then, it adjusts values between minimum and *metric* for the lower part of the color scale and values between *metric* and maximum for the upper part of the color scale.
+
+***WARNING!*** <br>
+Look at the histogram of your data to see the shape of the distribution of values. If you detect **skewness**, and still want to use standard deviation to create color intervals, first normalize your data. Thanks to that, you will get more normal-like distribution and standard deviation will no longer be outside the range of values.
+
+![](assets/distribution.png)
+
+**Finally, provide intervals for value-to-color mapping** <br>
+`-s {'std',intervals}` <br>
+The number of value ranges should correspond to the number of colors used. By default, the value range for a given color (*^ in 3-color scale variant only*) depends on the standard deviation `'std'`. Alternatively, when you need more complex color scale, provide a comma-separated list of metric's multipliers. For example, `"0.2,0.5,1.0,1.2,1.5"` will create five value intervals: `[color_1] < 0.2 * metric < [color_2] < 0.5 * metric < [color_3] < 1.0 * metric < [color_4] < 1.2 * metric < [color_5] < 1.5 * metric` *(metric: mean, median, or half of the maximum)*.
+
+![](assets/color_intervals.png)
+
 
 # (1) assign_colors.py app (python)
+
+The application **converts numerical values to colors** using customizable color scales. The returned output **keeps the the data structure of the user-provided input**. The selected numerical columns (by default all numerical columns) are mapped to colors and the remamining columns (e.g., labels, annotations) are copied unchanged. Besides value-to-color mapping, another important feature of this app is an **automatic generation of highly customizable color scales**. They can later be used independently with various visualization applications (e.g., plotly-based Python web apps, to learn more see <a href="https://datascience.101workbook.org/08-DataVisualization/02-GRAPHS/02-PYTHON/05-plotly-examples-in-jupyterlab" target="_blank">Plotly Graphing (JupyterLab examples)  ⤴</a> in the <a href="https://datascience.101workbook.org" target="_blank">Data Science Workbook  ⤴</a>).
+
+## Requirements
+
+* `pandas`
+* `numpy`
+
+<i>^ included in the generic version of <b>data_wrangling</b> Conda environment<br>
+<b>Learn more</b> from the <a href="https://datascience.101workbook.org/07-DataParsing/03-DATA-WRANGLING-APPS/00-data-wrangling-apps" target="_blank">Data Wrangling: use ready-made apps  ⤴</a> tutorial in the <a href="https://datascience.101workbook.org" target="_blank">Data Science Workbook  ⤴</a>.
+</i>
+
+## Options of ***assign_colors.py***
+
+help & info arguments:
+```
+  -h,         --help                    # show full help message and exit
+```
+
+required arguments: *None* *(run without arguments returns the default color scale)*
+
+
+optional arguments:
+```
+-cs colorscale, --colorscale CS         # [string] select colorscale type: provide pre-defined keyword (e.g., 'full', 'grey') or comma-separated list of colors (learn more from the docs)
+-csp cs_params, --colorscale-params CSP # [string] adjust custom colorscale: comma-separated list of 6 parameters in order (1) number of colors, (2) color lightness, (3) color saturation, (4) color transparency, (5) whether to convert colors to HEX notation, (6) reverse color scale order
+-i input,     --data-source input       # [string] input multi-col text file
+-l label,     --labels-col label        # [int]    index of column with labels
+-v vals, --values-col vals              # [string] comma-separated list of indices of numerical columns to have color assigned
+-m type, --measure type                 # {max,mean,median} select type of measure for the colorscale  reference:
+                                          - 'max' (half of the maximum value is the center of the colorscale) or
+                                          - 'mean' (mean as the center of the colorscale) or
+                                          - 'median' (meadian as the center of the colorscale)
+-t type, --measure-type type            # {glob,row,column,cell} select type of measure:
+                                          - 'glob' (stats over entire dataset) or
+                                          - 'row' (stats per data row) or
+                                          - 'column' (stats per data column) or
+                                          - 'cell' (stats per row-col pair)
+-s STEP, --step STEP                    # [string] provide color interval:
+                                          - 'std' (standard deviation by default) or
+                                          - comma-separated list of thresholds (e.g., 0.4,0.6,1.0)
+```
+
+*defaults for optional arguments:*
+```
+-cs 'grey'                          # means: the default (white-gray-black) scale is used
+-csp '3,0.5,1.0,0.9,true,false'     # means: default color scale parameters are:
+                                             (1) 3 color intervals are created
+                                             (2) lightness for HLS color notation is set to 0.5 (original color); a lower value will darken the color and a higher value will lighten it; value should be a float in range 0.0 - 1.0
+                                             (3) saturation for HLS color notation is set to 1.0 (original color); a lower value will add proportionally grey filter; value should be a float in range 0.0 - 1.0
+                                             (4) color alpha is set to 0.9 (90% of solid color, 10% transparancy); value should be a float in range 0.0 (100% transparent) - 1.0 (100% solid color)
+                                             (5) whether to convert colors to HEX notation (e.g., #FFFFFF for white); 'true' converts rgba notation to HEX annotation
+                                             (6) whether to reverse color scale order; by default shades of selected color are created from darker to lighter; 'true' will reverse the color scale
+-i ''                               # means: no input file will be loaded; it generates the customized color scale only
+-l None                             # means: no input file is provided, and so no label column is specified
+-v ''                               # means: all columns with numerical values will be mapped to colors
+-m 'mean'                           # means: the mean value will be used as a center of the color scale
+-t 'cell'                           # means: the measure will be calculated for each row x column pair in the matrix (input)
+-s 'std'                            # means: standard deviation (std) determines the color intervals, i.e., black below [measure - std] and white above [measure + std];
+                                             WARNING: when 'std' option is used only 3 first colors from the colorscale are used
+```
+
+
+## Example usage
+
+```
+python3 assign_colors.py [-cs colorscale] [-csp colorscale_params]
+                   [-i input] [-l label_column]
+                   [-v cols_for_mapping]
+                   [-m {max,mean,median}] [-t {glob,row,column,cell}] [-s intervals]
+                   [-h]
+```
+
+*^ arguments provided in square brackets [] are optional*
+
+
+### **[1] example usage with minimal required options**
+* <i> generates default color scale</i>
+
+run in the terminal:
+```
+python3 assign_colors.py
+```
+**STANDARD OUTPUT** <br>
+
+<details><summary>Help message</summary>
+
+```
+usage: assign_colors.py [-h] [-cs CS] [-csp CSP] [-i input] [-l label] [-v vals] [-m {max,mean,median}]
+                        [-t {glob,row,column,cell}] [-s STEP]
+
+Value-to-color mapping using customized color scales.
+
+Requirements: python3, pandas, numpy
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -cs CS, --colorscale CS
+                        select colorscale type: provide pre-defined keyword (e.g., 'full', 'grey') or comma-separated list of colors (learn more from the docs)
+  -csp CSP, --colorscale-params CSP
+                        adjust custom colorscale: comma-separated list of 6 parameters in order (1) number of colors, (2) color lightness, (3) color saturation, (4) color transparency, (5) whether to convert colors to HEX notation, (6) reverse color scale order
+  -i input, --data-source input
+                        [string] input multi-col file
+                        -l label, --labels-col label
+                                              [int] index of column with labels
+                        -v vals, --values-col vals
+                                              [string] list of indices of numerical columns to have color assigned
+                        -m {max,mean,median}, --measure {max,mean,median}
+                                              select type of color reference: 'max' (maximum value) or 'mean' or 'median'
+                        -t {glob,row,column,cell}, --measure-type {glob,row,column,cell}
+                                              select type of measure: 'glob' (stats over entire dataset) or 'row' (stats per data row) or 'col' (stats per data column) or 'cell' (stats per row-col pair)
+                        -s STEP, --step STEP  provide color interval: 'std' (standard deviation by default) or comma-separated list of thresholds (e.g., 0.4,0.6,1.0)
+USAGE:
+
+        e.g., minimal required inputs:
+                python3 assign_colors.py
+        e.g., create custom color scale only:
+                python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true,false'
+        e.g., value-to-color mapping with the default grey scale:
+                python3 assign_colors.py -i input_file.csv -l 0
+
+
+Use built-in colors (as keywords) or corresponding floats to generate custom color scale:
+'red': 0,               'vermilion': 0.5,               'orange': 1,            'golden': 1.5,
+'yellow': 2,            'yellowish': 2.5,               'chartreuse': 3,        'leaf': 3.5,
+'green': 4,             'cobalt_green': 4.5,            'emerald': 5,           'turquoise': 5.5,
+'cyan': 6,              'cerulean': 6.5,                'azure': 7,             'blue': 7.5,
+'ultramarine': 8,       'hyacinth': 8.5,                'violet': 9,            'purple': 9.5,
+'magenta': 10,          'reddish_purple': 10.5,         'crimson': 11,          'carmine': 11.5
+```
+</details>
+
+
+```
+COLOR SCALE: ['#000000', '#7f7f7f', '#ffffff']
+```
+
+**GRAPHIC FILE** `cs.png`
+
+![](assets/ex1_cs_grey.png)
+
+*The app, when run without any arguments, prints to the standard output 1) the help message, and 2) the default black-gray-white colorscale as a list of colors in HEX notation. The graphical representation of the color scale is automatically saved in the `cs.png` file for the visual inspection.*
+
+### **[2] example usage variations to create custom color scale** *(color scale only)*
+* <i> generates customized color scale for general usage</i>
+
+Use built-in colors (as keywords) or corresponding floats to generate custom color scale:
+```
+'red': 0,               'vermilion': 0.5,               'orange': 1,            'golden': 1.5,
+'yellow': 2,            'yellowish': 2.5,               'chartreuse': 3,        'leaf': 3.5,
+'green': 4,             'cobalt_green': 4.5,            'emerald': 5,           'turquoise': 5.5,
+'cyan': 6,              'cerulean': 6.5,                'azure': 7,             'blue': 7.5,
+'ultramarine': 8,       'hyacinth': 8.5,                'violet': 9,            'purple': 9.5,
+'magenta': 10,          'reddish_purple': 10.5,         'crimson': 11,          'carmine': 11.5
+```
+
+
+**A. Create shades of the selected color** *(from darker to lighter)*<br>
+run in the terminal:
+```
+python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true,false'
+```
+
+**STANDARD OUTPUT** <br>
+```
+COLOR SCALE: ['#000000', '#3f0000', '#7f0000', '#bf0000', '#ff0000', '#ff3f3f', '#ff7f7f', '#ffbfbf', '#ffffff']
+```
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex2_cs_red.png)
+
+*The app generates color scale based on the built-in `red` color which is set in the middle of the scale. The number of color intervals is set as the **first** parameter for the `-scp` option. We requested the 9-color scale. The remaining 5 parameters have default values.*
+
+**B. Create reverse-ordered shades of the selected color** *(from lighter to darker)*<br>
+run in the terminal:
+```
+python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true,true'
+```
+
+**STANDARD OUTPUT** <br>
+```
+COLOR SCALE: ['#ffffff', '#ffbfbf', '#ff7f7f', '#ff3f3f', '#ff0000', '#bf0000', '#7f0000', '#3f0000', '#000000']
+```
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex2_cs_red_rev.png)
+
+*The app generates the same color scale of `red` shades as in the example A. This time the order of colors is reversed (from lighter to darker) by changing the **6-th** parameter of the `-csp` option to `true`.*
+
+**C. Adjust saturation (grey filter) on the color scale** *(from lighter to darker)*<br>
+run in the terminal:
+```
+python3 assign_colors.py -cs 'red' -csp '9,0.5,0.2,0.9,true,true'
+```
+
+**STANDARD OUTPUT** <br>
+```
+COLOR SCALE: ['#ffffff', '#e5d8d8', '#cbb2b2', '#b28c8c', '#996666', '#724c4c', '#4c3333', '#261919', '#000000']
+```
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex2_cs_red_sat.png)
+
+*The app still uses the `red` color base for the color scale (as in examples A, B). This time we altered the **third** parameter of the `-csp` option which corresponds to the saturation level. By default, the maximum of 1.0 is set which provides the original (bright) color. As this value decreases (here to 0.2), the proportion of grey filter increases.*
+
+**D. Print color scale in the RGBA notation** *(instead of HEX notation)*<br>
+run in the terminal:
+```
+python3 assign_colors.py -cs 'red' -csp '9,0.5,0.2,0.9,false,true'
+```
+
+**STANDARD OUTPUT** <br>
+```
+COLOR SCALE: ['rgba(255, 255, 255, 0.9)', 'rgba(229, 216, 216, 0.9)', 'rgba(203, 178, 178, 0.9)', 'rgba(178, 140, 140, 0.9)', 'rgba(153, 102, 102, 0.9)', 'rgba(114, 76, 76, 0.9)', 'rgba(76, 51, 51, 0.9)', 'rgba(38, 25, 25, 0.9)', 'rgba(0, 0, 0, 0.9)']
+```
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex2_cs_red_sat.png)
+
+*The app still uses the `red` color base for the color scale (as in examples A, B, and C). This time we altered the **fifth** parameter of the `-csp` option which determines whether the colorscale is returned in the HEX notation. By default, the `true` value is set. As this value changes to `false`, the color scale is printed in the RGBA notation.*
+
+
+### **[3] example usage of value-to-color mapping with the default grey scale**
+* <i> generates value-to-color mapping for general usage</i>
+<!--
+run in the terminal:
+```
+python3 assign_colors.py -i input_file.csv -l 0
+```
+equal using all default options:
+```
+python3 assign_colors.py -i input_file.csv -l 0 -r 1 -a None -b None -v None -m 'mean' -t 'cell' -s 'std' -cs ''
+```
+
+*description*
+-->
+
+### **[4] example usage of default value-to-color mapping with custom color scale**
+* <i> generates value-to-color mapping for general usage</i>
+
+
+
+
+### **[5] example usage of custom value-to-color mapping with custom color scale**
+* <i> generates value-to-color mapping for general usage</i>
+
 
 
 
@@ -17,21 +298,27 @@ Value-to-color mapping facilitates:
 
 <b>The numerical values (from selected columns) are replaced by the corresponding discrete colors. </b>
 
-![](ideogram_convert_data.png)
+![](assets/ideogram_convert_data.png)
 
 First, we find the minimum, maximum, mean, median, and standard deviation over the data set. Minimum and maximum determine the range of values mapped to the color scale. The center of the color scale can be a **metric**: *mean*, *median*, or *half of the maximum* value. The number of colors in the color scale and distribution of values assigned to them is customizable. <br>
 By default, the 3-color scale: [1] *light gray* - [2] *gray* - [3] *black* is used, and the value thresholds between colors depends on the standard deviation `[1] < metric - std < [2] < metric + std < [3]`. <br>
 If different value intervals are needed, they must be a comma-separated list of metric multipliers [M]. For example, "0.2,0.4,0.6,0.8,1.0" will create five value intervals: `[1] < 0.2 * metric < [2] < 0.4 * metric < [3] < 0.6 * metric < [4] < 0.8 * metric < [5] < 1.0 * metric` (*metric: mean, median, or half of the maximum*). When the number of provided multipliers is higher than 3, the built-in 9-color scale will be used (7 gray shades + pink + purple pattern). The **default 3- and 9-color scales** are intended for generating input file for **ideogram-JS** visualization.
 
-![](built-in_color-scales.png)
+![](assets/built-in_color-scales.png)
 
  If you want to apply a **custom color scale**, the **ideogram-plotly** visualization app should be used instead. Then you can provide a comma-separated list of HEX colors (e.g., "#000000,#f6c5c5,#e66969,#d60c0c,#970000,#660000,#300000" for white - red - maroon shades). <br>
  Note the number and order of metric multipliers should match the number and order of colors (e.g., "0.25,0.5,0.75,1.0,1.25,1.5,2.0" multipliers for the red-shades color scale and half-max as a metric).
 
- ![](custom_color-scales.png)
+ ![](assets/custom_color-scales.png)
 
 ## Requirements
 
+* `pandas`
+* `numpy`
+
+<i>^ included in the generic version of <b>data_wrangling</b> Conda environment<br>
+<b>Learn more</b> from the <a href="https://datascience.101workbook.org/07-DataParsing/03-DATA-WRANGLING-APPS/00-data-wrangling-apps" target="_blank">Data Wrangling: use ready-made apps  ⤴</a> tutorial in the <a href="https://datascience.101workbook.org" target="_blank">Data Science Workbook  ⤴</a>.
+</i>
 
 ## Options of ***convert_to_ideogram.py***
 
@@ -66,7 +353,6 @@ optional arguments:
                                           - comma-separated list of thresholds (e.g., 0.4,0.6,1.0)
 -cs CS, --colorscale CS                 # [string] comma-separated list of HEX colors; do NOT use for ideogram-JS visualization; works with ideogram-plotly web app
                                                    (e.g., #FFFFFF,#a6a6a6,#000000 set up the white-gray-black scale)
-
 
 ```
 
