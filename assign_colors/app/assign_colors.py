@@ -337,7 +337,7 @@ if __name__ == '__main__':
         parser.print_help()
         print("\nUSAGE:\n")
         print("e.g., minimal required inputs:\n         python3 assign_colors.py")
-        print("e.g., create custom color scale only:\n         python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true'")
+        print("e.g., create custom color scale only:\n         python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true,false'")
         print("e.g., value-to-color mapping with the default grey scale:\n         python3 assign_colors.py -i input_file.csv -l 0")
         print("\n Use built-in colors (as keywords) or corresponding floats to generate custom color scale:\n"+str(HLS))
 
