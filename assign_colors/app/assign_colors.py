@@ -321,7 +321,9 @@ if __name__ == '__main__':
     if len(sys.argv) < 1:
         parser.print_help()
         print("\nUSAGE:\n")
-        print("e.g., minimal required inputs:\n         python3 assign_colors.py -i input_file -l 0 -r 1")
+        print("e.g., minimal required inputs:\n         python3 assign_colors.py")
+        print("e.g., create custom color scale only:\n         python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true'")
+        print("e.g., value-to-color mapping with the default grey scale:\n         python3 assign_colors.py -i input_file.csv -l 0")
         sys.exit(1)
 
     args = parser.parse_args()
