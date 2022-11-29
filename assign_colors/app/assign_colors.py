@@ -36,7 +36,7 @@ def generate_colorscale(c=0, t='full', n=12, l=0.5, s=1.0, a=0.9, h='true', r='f
                 logging.error('Provided color names do NOT match the predefined list. Please select colors from: \n' + str(HLS.values()))
         else:
             try:		# user-provided list of floats in range 0-12, e.g., "0.5,1.0,3.0,6.5,10.0"
-                vals = [s for s in t if s.isdigit()]
+                vals = [float(s) for s in t]
                 rgba_colors = [ tuple((255*np.array(hls_to_rgb(val/12.0, l, s))).astype(int))+(a,) for val in vals ]
             except:
                 print("ERROR: user-provided values are not a list of floats in range 0-12")
@@ -339,6 +339,7 @@ if __name__ == '__main__':
         print("e.g., minimal required inputs:\n         python3 assign_colors.py")
         print("e.g., create custom color scale only:\n         python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true'")
         print("e.g., value-to-color mapping with the default grey scale:\n         python3 assign_colors.py -i input_file.csv -l 0")
+        print("\n Use built-in colors (as keywords) or corresponding floats to generate custom color scale:\n"+str(HLS))
 
     args = parser.parse_args()
     assign_colors(args.cs, args.csp, args.input, args.label, args.vals, args.measure, args.mtype, args.step)
