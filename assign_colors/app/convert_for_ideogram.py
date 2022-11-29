@@ -222,8 +222,8 @@ def convert_for_ideogram(input_file, labels, ranges, arms, bands, values, measur
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='convert_for_ideogram.py',
-        description="""Convert data to idogram format.\n 
-                       Requirements: python3, pandas""",
+        description="""Value-to-color mapping and data convertion to ideogram format.\n 
+                       Requirements: python3, pandas, numpy""",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=''
     )
