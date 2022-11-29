@@ -5,7 +5,6 @@ import logging			# to provide verbosity level
 import pandas as pd             # to easily parse json object and filter out data; require installation with conda or pip
 import numpy as np              # to parse advanced numerical data structures; require installation
 from colorsys import hls_to_rgb # to generate various color scales
-import PIL
 from PIL import Image, ImageDraw
 
 
@@ -267,9 +266,9 @@ def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true,false", input_file=''
 ###-- add options to the argument parser to make it easier to customize and run the script from the command line
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog='convert_for_ideogram.py',
-        description="""Convert data to idogram format.\n 
-                       Requirements: python3, pandas""",
+        prog='assign_colors.py',
+        description="""Value-to-color mapping using customized color scales.\n 
+                       Requirements: python3, pandas, numpy""",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=''
     )
