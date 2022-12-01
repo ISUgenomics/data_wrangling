@@ -185,6 +185,18 @@ COLOR SCALE: ['#000000', '#7f7f7f', '#ffffff']
 ### **[2] example usage variations to create custom color scale** *(color scale only)*
 * <i> generates customized color scale for general usage</i>
 
+To create customized color scale you have to adjust arguments of two option flags: `-cs` and `-csp`.
+
+The `-cs` sets the general type of the color scale and accepts several string-like arguments:
+* 'grey' - uses the default black-grey-white color scale
+* 'full' - creates the rainbow color scale made up of N discrete colors
+* 'red' - creates the shades scale (black-color-white) of color selected from the list of built-in color keys (*see the list below*)
+* 'orange,red,magenta,crimson' - creates color scale using list of user-selected built-in color keys
+* '2,3,4.5,5.5' - creates color scale using list of user-selected numerical values assigned to built-in color keys
+* '#3f0000,#7f0000,#bf0000,#ff0000,#ff3f3f,#ff7f7f' - creates color scale using list of user-provided colors in HEX notation
+
+DEFAULT: 'grey'
+
 Use built-in colors (as keywords) or corresponding floats to generate custom color scale:
 ```
 'red': 0,               'vermilion': 0.5,               'orange': 1,            'golden': 1.5,
@@ -195,9 +207,33 @@ Use built-in colors (as keywords) or corresponding floats to generate custom col
 'magenta': 10,          'reddish_purple': 10.5,         'crimson': 11,          'carmine': 11.5
 ```
 
+![](assets/built-in_colors.png)
 
-**A. Create shades of the selected color** *(from darker to lighter)*<br>
+The `-csp` option adjust the selected color scale to user needs by tuning up to six ordered parameters:
+`N,L,S,A,H,R`
+* (1) **N** - number of discrete colors in the color scale
+* (2) **L** - lightness of the colors defined in the HLS notation; float value in [0,1] range; default is set to 0.5 which denotes original bright color
+* (3) **S** - saturation of the colors defined in the HLS notation; float value in [0,1] range; default is set to 1.0 which denotes original bright color; decreasing the value increases the grey filter [see usage **example C**]
+* (4) **A** - alpha of the colors; float value in [0,1] range; default is set to 0.9 which denotes 90% of solid color and 10% transparency
+* (5) **H** - whether to convert colors to HEX notation (e.g., #FFFFFF for white); 'true' converts rgba notation to HEX annotation
+* (6) **R** - whether to reverse color scale order; by default shades of selected color are created from darker to lighter; 'true' will reverse the color scale
+
+DEAFULT: `'3,0.5,1.0,0.9,true,false'` <br>
+*^ if you want to alter only selected params, leaving empty the remaining fields will keep their default values* <br>
+*e.g., `'9,,,,,true'` creates 9-color scale with reversed order of colors with all other params being the defaults*
+
+**A. Create shades of the selected color** *(from darker to lighter)* <br>
+
+<details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
+
+<br>
+Creating color scale composed by shades of selected color, means that the original color is set in the middle of the scale and its darker shades (up to black) are added to the one end of the scale while its lighter shades (up to white) are added on the other end of the scale. Shades are generated automatically depending on the user-provided number of discrete colors expected in the color scale. The <b>lightness levels</b> of the user-selected built-in color <b>are set automatically</b> (<i>to create linear steps of the color shades</i>), thus the change in the <b>lightness (L) parameter</b> (second param in the <code>-csp</code> option) <b>has no effect</b>.
+
 run in the terminal:
+```
+python3 assign_colors.py -cs 'red' -csp '9,,,,,'
+```
+equal using defaults for the remaining params:
 ```
 python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true,false'
 ```
@@ -213,10 +249,17 @@ COLOR SCALE: ['#000000', '#3f0000', '#7f0000', '#bf0000', '#ff0000', '#ff3f3f', 
 
 *The app generates color scale based on the built-in `red` color which is set in the middle of the scale. The number of color intervals is set as the **first** parameter for the `-scp` option. We requested the 9-color scale. The remaining 5 parameters have default values.*
 
+</details><br>
+
 **B. Create reverse-ordered shades of the selected color** *(from lighter to darker)*<br>
+
+<details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
+
+<br>
+
 run in the terminal:
 ```
-python3 assign_colors.py -cs 'red' -csp '9,0.5,1.0,0.9,true,true'
+python3 assign_colors.py -cs 'red' -csp '9,,,,,true'
 ```
 
 **STANDARD OUTPUT** <br>
@@ -230,10 +273,18 @@ COLOR SCALE: ['#ffffff', '#ffbfbf', '#ff7f7f', '#ff3f3f', '#ff0000', '#bf0000', 
 
 *The app generates the same color scale of `red` shades as in the example A. This time the order of colors is reversed (from lighter to darker) by changing the **6-th** parameter of the `-csp` option to `true`.*
 
-**C. Adjust saturation (grey filter) on the color scale** *(from lighter to darker)*<br>
+</details><br>
+
+
+**C. Adjust saturation (grey filter) on the color scale** <br>
+
+<details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
+
+<br>
+
 run in the terminal:
 ```
-python3 assign_colors.py -cs 'red' -csp '9,0.5,0.2,0.9,true,true'
+python3 assign_colors.py -cs 'red' -csp '9,,0.2,,,true'
 ```
 
 **STANDARD OUTPUT** <br>
@@ -247,10 +298,17 @@ COLOR SCALE: ['#ffffff', '#e5d8d8', '#cbb2b2', '#b28c8c', '#996666', '#724c4c', 
 
 *The app still uses the `red` color base for the color scale (as in examples A, B). This time we altered the **third** parameter of the `-csp` option which corresponds to the saturation level. By default, the maximum of 1.0 is set which provides the original (bright) color. As this value decreases (here to 0.2), the proportion of grey filter increases.*
 
+</details><br>
+
 **D. Print color scale in the RGBA notation** *(instead of HEX notation)*<br>
+
+<details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
+
+<br>
+
 run in the terminal:
 ```
-python3 assign_colors.py -cs 'red' -csp '9,0.5,0.2,0.9,false,true'
+python3 assign_colors.py -cs 'red' -csp '9,,.2,,false,true'
 ```
 
 **STANDARD OUTPUT** <br>
@@ -258,38 +316,458 @@ python3 assign_colors.py -cs 'red' -csp '9,0.5,0.2,0.9,false,true'
 COLOR SCALE: ['rgba(255, 255, 255, 0.9)', 'rgba(229, 216, 216, 0.9)', 'rgba(203, 178, 178, 0.9)', 'rgba(178, 140, 140, 0.9)', 'rgba(153, 102, 102, 0.9)', 'rgba(114, 76, 76, 0.9)', 'rgba(76, 51, 51, 0.9)', 'rgba(38, 25, 25, 0.9)', 'rgba(0, 0, 0, 0.9)']
 ```
 
-**GRAPHIC FILE**  `cs.png`
-
-![](assets/ex2_cs_red_sat.png)
-
 *The app still uses the `red` color base for the color scale (as in examples A, B, and C). This time we altered the **fifth** parameter of the `-csp` option which determines whether the colorscale is returned in the HEX notation. By default, the `true` value is set. As this value changes to `false`, the color scale is printed in the RGBA notation.*
 
+</details><br>
 
-### **[3] example usage of value-to-color mapping with the default grey scale**
+**E. Create color scale made up of several built-in colors** <br>
+
+<details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
+
+<br>
+
+If you need a color scale made of several clearly distinguishable colors (*instead of shades of a single color*) you can provide a list of built-in color keys (or their float equivalents). Note that in this case, the color scale is composed of X colors directly specified by the user and the first parameter (*N*) of the `-csp` option has no effect.
+
+run in the terminal:
+```
+python3 assign_colors.py -cs 'yellow,red,cyan,magenta,leaf,orange'
+```
+equal using floats corresponding to the built-in color keys:
+```
+python3 assign_colors.py -cs '2,0,6,10,3.5,1'
+```
+
+**STANDARD OUTPUT** <br>
+```
+COLOR SCALE: ['#feff00', '#ff0000', '#00feff', '#ff00fe', '#3fff00', '#ff7f00']
+```
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex2_cs_multi.png)
+
+In this case, you can further adjust all the color scale parameters available with option `-csp`, including *lightness*, *saturation*, and *alpha-transparency*.
+
+* decrease / increase lightness (*second param of the `-csp` option*)
+```
+python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',0.2,,,,'
+```
+`COLOR SCALE: ['#656600', '#660000', '#006566', '#660065', '#196600', '#663300']`
+![](assets/ex2_cs_multi-darker.png)
+```
+python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',0.8,,,,'
+```
+`COLOR SCALE: ['#feff99', '#ff9999', '#99feff', '#ff99fe', '#b2ff99', '#ffcc99']`
+![](assets/ex2_cs_multi-lighter.png)
+
+
+* decrease saturation (*third param of the `-csp` option*)
+```
+python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',,0.5,,,'
+```
+`COLOR SCALE: ['#bfbf3f', '#bf3f3f', '#3fbfbf', '#bf3fbf', '#5fbf3f', '#bf7f3f']`
+![](assets/ex2_cs_multi-sat.png)
+
+* increase transparency (*fourth param of the `-csp` option*)
+```
+python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',,,0.2,,'
+```
+`COLOR SCALE: ['#feff00', '#ff0000', '#00feff', '#ff00fe', '#3fff00', '#ff7f00']`
+![](assets/ex2_cs_multi-alpha.png)
+
+* reverse color order (*fourth param of the `-csp` option*)
+```
+python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',,,,,true'
+```
+`COLOR SCALE: ['#ff7f00', '#3fff00', '#ff00fe', '#00feff', '#ff0000', '#feff00']`
+![](assets/ex2_cs_multi-rev.png)
+
+* apply several effects all at once
+```
+python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',0.5,0.5,0.5,,true'
+```
+`COLOR SCALE: ['#bf7f3f', '#5fbf3f', '#bf3fbf', '#3fbfbf', '#bf3f3f', '#bfbf3f']`
+![](assets/ex2_cs_multi-multi.png)
+
+</details></br>
+
+**F. Create rainbow color scale** <br>
+
+<details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
+
+<br>
+
+If you like color scales with rainbow-like order of colors, then you should use a keyword `'full'` with option `-cs`. This will automatically pick the colors from the available distribution. The number of discrete colors depends on the user-provided parameter N (the first parameter) with the `-csp` option. Note that rainbow-like color scale can be adjusted with all the params of the `-csp` option (including lightness, saturation, alpha-transparency, and reversing the order of colors).
+
+run in the terminal:
+```
+python3 assign_colors.py -cs 'full' -csp '12,,,,,'
+```
+
+**STANDARD OUTPUT** <br>
+```
+COLOR SCALE: ['#ff0000', '#ff8400', '#f5ff00', '#71ff00', '#00ff12', '#00ff96', '#00e3ff', '#005fff', '#2500ff', '#a900ff', '#ff00d0', '#ff004c']
+```
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex2_cs_rainbow.png)
+
+</details><br>
+
+
+**G. Create fully customized color scale made of user-provided colors** <br>
+
+<details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
+
+<br>
+
+If you want to re-create the specific color scale (*e.g., from the past project*), you have to know *apriori* the color codes you want to use. In this case, color codes in HEX notation have to be provided as a comma-separated list with the `-cs` option. Note that such a color scale can NOT be further adjusted with params of the `-csp` option. However, with this usage scenario you can easily merge several color-shade scales (*e.g., red and blue like here*).
+
+run in the terminal:
+```
+python3 assign_colors.py -cs '#bf0000,#ff0000,#ff3f3f,#ff7f7f,#ffbfbf,#ffffff,#bfcfff,#7f9fff,#3f6fff,#003fff,#002fbf'
+```
+
+**STANDARD OUTPUT** <br>
+```
+COLOR SCALE: ['#bf0000', '#ff0000', '#ff3f3f', '#ff7f7f', '#ffbfbf', '#ffffff', '#bfcfff', '#7f9fff', '#3f6fff', '#003fff', '#002fbf']
+```
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex2_cs_custom.png)
+
+</details>
+
+
+### **[3] example usage of the default value-to-color mapping with the default grey scale**
 * <i> generates value-to-color mapping for general usage</i>
-<!--
+
+
 run in the terminal:
 ```
 python3 assign_colors.py -i input_file.csv -l 0
 ```
 equal using all default options:
 ```
-python3 assign_colors.py -i input_file.csv -l 0 -r 1 -a None -b None -v None -m 'mean' -t 'cell' -s 'std' -cs ''
+python3 assign_colors.py -i input_file.csv -l 0 -v '' -m 'mean' -t 'cell' -s 'std' -cs 'grey' -csp '3,0.5,1.0,0.9,true,false'
 ```
 
-*description*
--->
+**STANDARD OUTPUT** <br>
+
+*By default with value-to-color mapping, statistics from all numeric columns are returned to the standard output. The statistics include 5 metrics: minimum, maximum, mean, median, and standard deviation. Every metric is calculated in a few grouping variants and returned as metrices: per COLUMN (which makes it easy to extract GLOBAL value) and per row-column [unique label-trait pairs] (which provides explicit values for CELL type of data slicing and makes it easy to extract per ROW, i.e. unique label value).*
+
+<details><summary>expand content</summary>
+
+```
+COLOR SCALE: ['#000000', '#7f7f7f', '#ffffff']
+
+#-OVARALL STATS:
+ KEYS:      val-2      val-3      val-4      val-5      val-6      val-7      val-8      val-9
+ MINI:      0.076        0.0        0.0        0.0        0.0        0.0        0.0        0.0
+ MAXI:     35.148     26.726      5.429      4.161     24.516      43.47       5.13      6.168
+ MEAN:      2.939      2.545      0.836      0.721       2.64       2.51      0.822      0.835
+ MEDI:      1.159      0.962      0.426      0.353      0.944      0.994      0.258      0.251
+ STDV:      5.336      4.503        1.0      0.933       4.09      6.219      1.126      1.355
+
+#-MINI IN GROUPS =  0.0
+              label  val-2  val-3  val-4  val-5  val-6  val-7  val-8  val-9
+0   HiC_scaffold_1  0.107  0.000  0.000  0.000  0.206  0.007  0.000  0.000
+1   HiC_scaffold_2  0.417  0.768  0.142  0.000  0.608  0.327  0.039  0.213
+2   HiC_scaffold_3  0.643  0.885  0.493  0.202  0.891  0.980  0.083  0.240
+3   HiC_scaffold_4  1.849  2.601  0.547  1.021  3.253  1.890  0.482  0.588
+4   HiC_scaffold_5  0.522  0.928  0.285  0.105  0.558  0.204  0.109  0.148
+5   HiC_scaffold_6  0.486  0.146  0.117  0.040  0.251  0.412  0.000  0.035
+6   HiC_scaffold_7  0.076  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+7   HiC_scaffold_8  3.874  6.496  1.576  1.318  3.908  4.366  1.827  1.184
+8   HiC_scaffold_9  1.848  2.576  0.541  0.235  2.271  1.207  0.234  0.256
+9  HiC_scaffold_10  0.772  0.751  0.135  0.000  0.117  0.000  0.242  0.000
+
+#-MAXI IN GROUPS =  43.47
+              label   val-2   val-3  val-4  val-5   val-6   val-7  val-8  val-9
+0   HiC_scaffold_1   3.458   1.908  0.417  0.438   0.895   1.593  0.831  1.030
+1   HiC_scaffold_2  35.148  26.726  5.429  3.047  24.516  43.470  5.130  6.168
+2   HiC_scaffold_3   6.301   4.692  1.977  2.135   4.320   4.662  2.965  2.122
+3   HiC_scaffold_4   4.742   3.612  1.447  1.268   4.543   3.740  2.980  2.409
+4   HiC_scaffold_5   5.242   3.800  2.159  1.133   4.691   5.975  2.260  1.209
+5   HiC_scaffold_6   1.613   1.724  1.438  0.802   2.353   1.561  0.657  0.785
+6   HiC_scaffold_7   2.184   2.173  1.490  1.444   2.477   2.708  1.646  1.141
+7   HiC_scaffold_8   9.339  14.601  2.804  3.357  10.015   6.917  2.757  3.896
+8   HiC_scaffold_9   9.472  10.185  2.304  2.276   9.641   5.288  2.242  2.611
+9  HiC_scaffold_10   8.198   7.925  2.741  4.161   9.405   8.641  2.951  6.093
+
+#-MEAN IN GROUPS =  1.731
+              label  val-2   val-3  val-4  val-5  val-6  val-7  val-8  val-9
+0   HiC_scaffold_1  1.024   0.630  0.217  0.177  0.499  0.772  0.193  0.290
+1   HiC_scaffold_2  8.861   6.715  1.730  1.044  6.659  9.545  1.275  1.763
+2   HiC_scaffold_3  2.216   1.881  1.054  0.775  2.321  2.269  0.950  0.917
+3   HiC_scaffold_4  3.296   3.107  0.997  1.144  3.898  2.815  1.731  1.498
+4   HiC_scaffold_5  2.307   2.188  0.746  0.488  1.929  2.075  0.831  0.622
+5   HiC_scaffold_6  1.048   0.762  0.493  0.432  1.260  0.897  0.300  0.354
+6   HiC_scaffold_7  0.564   0.535  0.414  0.357  0.528  0.544  0.251  0.159
+7   HiC_scaffold_8  6.607  10.549  2.190  2.338  6.962  5.641  2.292  2.540
+8   HiC_scaffold_9  6.447   6.728  1.494  1.475  6.529  3.810  1.427  1.653
+9  HiC_scaffold_10  4.692   2.594  1.123  1.285  4.469  2.671  1.726  1.461
+
+#-MEDI IN GROUPS:
+              label  val-2   val-3  val-4  val-5  val-6  val-7  val-8  val-9
+0   HiC_scaffold_1  0.697   0.605  0.221  0.155  0.432  0.684  0.054  0.178
+1   HiC_scaffold_2  1.933   0.995  0.942  0.431  3.196  1.008  0.191  0.740
+2   HiC_scaffold_3  0.960   0.974  0.873  0.381  2.037  1.718  0.376  0.654
+3   HiC_scaffold_4  3.296   3.107  0.997  1.144  3.898  2.815  1.731  1.498
+4   HiC_scaffold_5  1.822   1.904  0.340  0.470  1.670  1.377  0.528  0.647
+5   HiC_scaffold_6  1.222   0.598  0.304  0.598  1.345  0.934  0.246  0.245
+6   HiC_scaffold_7  0.398   0.331  0.211  0.108  0.344  0.388  0.015  0.000
+7   HiC_scaffold_8  6.607  10.549  2.190  2.338  6.962  5.641  2.292  2.540
+8   HiC_scaffold_9  8.021   7.424  1.638  1.914  7.675  4.935  1.806  2.093
+9  HiC_scaffold_10  6.404   1.039  1.019  0.927  5.883  1.749  2.127  0.186
+
+#-STDV IN GROUPS:
+              label   val-2   val-3  val-4  val-5   val-6   val-7  val-8  val-9
+0   HiC_scaffold_1   1.079   0.627  0.147  0.166   0.227   0.518  0.300  0.338
+1   HiC_scaffold_2  14.828  11.277  2.177  1.227  10.065  18.980  2.183  2.516
+2   HiC_scaffold_3   2.729   1.874  0.671  0.915   1.446   1.684  1.361  0.837
+3   HiC_scaffold_4   2.046   0.715  0.636  0.175   0.912   1.308  1.766  1.288
+4   HiC_scaffold_5   1.854   1.207  0.800  0.418   1.650   2.311  0.896  0.438
+5   HiC_scaffold_6   0.484   0.615  0.543  0.359   0.833   0.483  0.252  0.313
+6   HiC_scaffold_7   0.583   0.625  0.524  0.548   0.666   0.761  0.485  0.341
+7   HiC_scaffold_8   3.864   5.731  0.868  1.442   4.318   1.804  0.658  1.918
+8   HiC_scaffold_9   4.048   3.852  0.890  1.089   3.816   2.261  1.056  1.238
+9  HiC_scaffold_10   3.437   3.040  1.005  1.683   3.859   3.440  1.107  2.612
+```
+
+</details><br>
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex1_cs_grey.png)
+
+**OUTPUT DATA FILE**  `colors.csv` (*3-colors used only*)
+
+```
+label,position,val-2,val-3,val-4,val-5,val-6,val-7,val-8,val-9,count
+HiC_scaffold_1,982.0-10982.0,#7f7f7f,#7f7f7f,#000000,#000000,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f
+HiC_scaffold_1,10982.0-20982.0,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#ffffff,#7f7f7f,#7f7f7f,#7f7f7f,#ffffff
+HiC_scaffold_1,20982.0-30982.0,#7f7f7f,#000000,#000000,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f
+HiC_scaffold_1,30982.0-40982.0,#7f7f7f,#000000,#ffffff,#000000,#000000,#000000,#7f7f7f,#7f7f7f,#000000
+HiC_scaffold_1,40982.0-50982.0,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#7f7f7f,#ffffff,#7f7f7f
+```
 
 ### **[4] example usage of default value-to-color mapping with custom color scale**
 * <i> generates value-to-color mapping for general usage</i>
 
+run in the terminal:
+```
+python3 assign_colors.py -i input_file.csv -l 0 -cs 'red' -csp '5,,0.5,,,'
+```
 
+**STANDARD OUTPUT** <br>
+
+<details><summary>expand content</summary>
+
+```
+COLOR SCALE: ['#000000', '#5f1f1f', '#bf3f3f', '#df9f9f', '#ffffff']
+
+#-OVARALL STATS:
+ KEYS:      val-2      val-3      val-4      val-5      val-6      val-7      val-8      val-9
+ MINI:      0.076        0.0        0.0        0.0        0.0        0.0        0.0        0.0
+ MAXI:     35.148     26.726      5.429      4.161     24.516      43.47       5.13      6.168
+ MEAN:      2.939      2.545      0.836      0.721       2.64       2.51      0.822      0.835
+ MEDI:      1.159      0.962      0.426      0.353      0.944      0.994      0.258      0.251
+ STDV:      5.336      4.503        1.0      0.933       4.09      6.219      1.126      1.355
+
+#-MINI IN GROUPS =  0.0
+              label  val-2  val-3  val-4  val-5  val-6  val-7  val-8  val-9
+0   HiC_scaffold_1  0.107  0.000  0.000  0.000  0.206  0.007  0.000  0.000
+1   HiC_scaffold_2  0.417  0.768  0.142  0.000  0.608  0.327  0.039  0.213
+2   HiC_scaffold_3  0.643  0.885  0.493  0.202  0.891  0.980  0.083  0.240
+3   HiC_scaffold_4  1.849  2.601  0.547  1.021  3.253  1.890  0.482  0.588
+4   HiC_scaffold_5  0.522  0.928  0.285  0.105  0.558  0.204  0.109  0.148
+5   HiC_scaffold_6  0.486  0.146  0.117  0.040  0.251  0.412  0.000  0.035
+6   HiC_scaffold_7  0.076  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+7   HiC_scaffold_8  3.874  6.496  1.576  1.318  3.908  4.366  1.827  1.184
+8   HiC_scaffold_9  1.848  2.576  0.541  0.235  2.271  1.207  0.234  0.256
+9  HiC_scaffold_10  0.772  0.751  0.135  0.000  0.117  0.000  0.242  0.000
+
+#-MAXI IN GROUPS =  43.47
+              label   val-2   val-3  val-4  val-5   val-6   val-7  val-8  val-9
+0   HiC_scaffold_1   3.458   1.908  0.417  0.438   0.895   1.593  0.831  1.030
+1   HiC_scaffold_2  35.148  26.726  5.429  3.047  24.516  43.470  5.130  6.168
+2   HiC_scaffold_3   6.301   4.692  1.977  2.135   4.320   4.662  2.965  2.122
+3   HiC_scaffold_4   4.742   3.612  1.447  1.268   4.543   3.740  2.980  2.409
+4   HiC_scaffold_5   5.242   3.800  2.159  1.133   4.691   5.975  2.260  1.209
+5   HiC_scaffold_6   1.613   1.724  1.438  0.802   2.353   1.561  0.657  0.785
+6   HiC_scaffold_7   2.184   2.173  1.490  1.444   2.477   2.708  1.646  1.141
+7   HiC_scaffold_8   9.339  14.601  2.804  3.357  10.015   6.917  2.757  3.896
+8   HiC_scaffold_9   9.472  10.185  2.304  2.276   9.641   5.288  2.242  2.611
+9  HiC_scaffold_10   8.198   7.925  2.741  4.161   9.405   8.641  2.951  6.093
+
+#-MEAN IN GROUPS =  1.731
+              label  val-2   val-3  val-4  val-5  val-6  val-7  val-8  val-9
+0   HiC_scaffold_1  1.024   0.630  0.217  0.177  0.499  0.772  0.193  0.290
+1   HiC_scaffold_2  8.861   6.715  1.730  1.044  6.659  9.545  1.275  1.763
+2   HiC_scaffold_3  2.216   1.881  1.054  0.775  2.321  2.269  0.950  0.917
+3   HiC_scaffold_4  3.296   3.107  0.997  1.144  3.898  2.815  1.731  1.498
+4   HiC_scaffold_5  2.307   2.188  0.746  0.488  1.929  2.075  0.831  0.622
+5   HiC_scaffold_6  1.048   0.762  0.493  0.432  1.260  0.897  0.300  0.354
+6   HiC_scaffold_7  0.564   0.535  0.414  0.357  0.528  0.544  0.251  0.159
+7   HiC_scaffold_8  6.607  10.549  2.190  2.338  6.962  5.641  2.292  2.540
+8   HiC_scaffold_9  6.447   6.728  1.494  1.475  6.529  3.810  1.427  1.653
+9  HiC_scaffold_10  4.692   2.594  1.123  1.285  4.469  2.671  1.726  1.461
+
+#-MEDI IN GROUPS:
+              label  val-2   val-3  val-4  val-5  val-6  val-7  val-8  val-9
+0   HiC_scaffold_1  0.697   0.605  0.221  0.155  0.432  0.684  0.054  0.178
+1   HiC_scaffold_2  1.933   0.995  0.942  0.431  3.196  1.008  0.191  0.740
+2   HiC_scaffold_3  0.960   0.974  0.873  0.381  2.037  1.718  0.376  0.654
+3   HiC_scaffold_4  3.296   3.107  0.997  1.144  3.898  2.815  1.731  1.498
+4   HiC_scaffold_5  1.822   1.904  0.340  0.470  1.670  1.377  0.528  0.647
+5   HiC_scaffold_6  1.222   0.598  0.304  0.598  1.345  0.934  0.246  0.245
+6   HiC_scaffold_7  0.398   0.331  0.211  0.108  0.344  0.388  0.015  0.000
+7   HiC_scaffold_8  6.607  10.549  2.190  2.338  6.962  5.641  2.292  2.540
+8   HiC_scaffold_9  8.021   7.424  1.638  1.914  7.675  4.935  1.806  2.093
+9  HiC_scaffold_10  6.404   1.039  1.019  0.927  5.883  1.749  2.127  0.186
+
+#-STDV IN GROUPS:
+              label   val-2   val-3  val-4  val-5   val-6   val-7  val-8  val-9
+0   HiC_scaffold_1   1.079   0.627  0.147  0.166   0.227   0.518  0.300  0.338
+1   HiC_scaffold_2  14.828  11.277  2.177  1.227  10.065  18.980  2.183  2.516
+2   HiC_scaffold_3   2.729   1.874  0.671  0.915   1.446   1.684  1.361  0.837
+3   HiC_scaffold_4   2.046   0.715  0.636  0.175   0.912   1.308  1.766  1.288
+4   HiC_scaffold_5   1.854   1.207  0.800  0.418   1.650   2.311  0.896  0.438
+5   HiC_scaffold_6   0.484   0.615  0.543  0.359   0.833   0.483  0.252  0.313
+6   HiC_scaffold_7   0.583   0.625  0.524  0.548   0.666   0.761  0.485  0.341
+7   HiC_scaffold_8   3.864   5.731  0.868  1.442   4.318   1.804  0.658  1.918
+8   HiC_scaffold_9   4.048   3.852  0.890  1.089   3.816   2.261  1.056  1.238
+9  HiC_scaffold_10   3.437   3.040  1.005  1.683   3.859   3.440  1.107  2.612
+```
+
+</details><br>
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex4_cs.png)
+
+**OUTPUT DATA FILE**  `colors.csv` (*5-colors used*)
+
+```
+label,position,val-2,val-3,val-4,val-5,val-6,val-7,val-8,val-9,count
+HiC_scaffold_1,982.0-10982.0,#5f1f1f,#5f1f1f,#000000,#000000,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f
+HiC_scaffold_1,10982.0-20982.0,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#bf3f3f,#5f1f1f,#5f1f1f,#5f1f1f,#bf3f3f
+HiC_scaffold_1,20982.0-30982.0,#5f1f1f,#000000,#000000,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f
+HiC_scaffold_1,30982.0-40982.0,#5f1f1f,#000000,#bf3f3f,#000000,#000000,#000000,#5f1f1f,#5f1f1f,#000000
+HiC_scaffold_1,40982.0-50982.0,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#5f1f1f,#bf3f3f,#5f1f1f
+...
+```
 
 
 ### **[5] example usage of custom value-to-color mapping with custom color scale**
 * <i> generates value-to-color mapping for general usage</i>
 
+run in the terminal:
+```
+python3 assign_colors.py -i input_file.csv -l 0 -cs 'red' -csp '5,,0.5,,, -v 2,3,4 -m 'max' -t 'column' -s 0.25,0.5,1,1.5,2
+```
 
+**STANDARD OUTPUT** <br>
+
+<details><summary>expand content</summary>
+
+```
+COLOR SCALE: ['#000000', '#5f1f1f', '#bf3f3f', '#df9f9f', '#ffffff']
+
+#-OVARALL STATS:
+ KEYS:      val-2      val-3      val-4
+ MINI:      0.076        0.0        0.0
+ MAXI:     35.148     26.726      5.429
+ MEAN:      2.939      2.545      0.836
+ MEDI:      1.159      0.962      0.426
+ STDV:      5.336      4.503        1.0
+
+#-MINI IN GROUPS =  0.0
+              label  val-2  val-3  val-4
+0   HiC_scaffold_1  0.107  0.000  0.000
+1   HiC_scaffold_2  0.417  0.768  0.142
+2   HiC_scaffold_3  0.643  0.885  0.493
+3   HiC_scaffold_4  1.849  2.601  0.547
+4   HiC_scaffold_5  0.522  0.928  0.285
+5   HiC_scaffold_6  0.486  0.146  0.117
+6   HiC_scaffold_7  0.076  0.000  0.000
+7   HiC_scaffold_8  3.874  6.496  1.576
+8   HiC_scaffold_9  1.848  2.576  0.541
+9  HiC_scaffold_10  0.772  0.751  0.135
+
+#-MAXI IN GROUPS =  35.148
+              label   val-2   val-3  val-4
+0   HiC_scaffold_1   3.458   1.908  0.417
+1   HiC_scaffold_2  35.148  26.726  5.429
+2   HiC_scaffold_3   6.301   4.692  1.977
+3   HiC_scaffold_4   4.742   3.612  1.447
+4   HiC_scaffold_5   5.242   3.800  2.159
+5   HiC_scaffold_6   1.613   1.724  1.438
+6   HiC_scaffold_7   2.184   2.173  1.490
+7   HiC_scaffold_8   9.339  14.601  2.804
+8   HiC_scaffold_9   9.472  10.185  2.304
+9  HiC_scaffold_10   8.198   7.925  2.741
+
+#-MEAN IN GROUPS =  2.106666666666667
+              label  val-2   val-3  val-4
+0   HiC_scaffold_1  1.024   0.630  0.217
+1   HiC_scaffold_2  8.861   6.715  1.730
+2   HiC_scaffold_3  2.216   1.881  1.054
+3   HiC_scaffold_4  3.296   3.107  0.997
+4   HiC_scaffold_5  2.307   2.188  0.746
+5   HiC_scaffold_6  1.048   0.762  0.493
+6   HiC_scaffold_7  0.564   0.535  0.414
+7   HiC_scaffold_8  6.607  10.549  2.190
+8   HiC_scaffold_9  6.447   6.728  1.494
+9  HiC_scaffold_10  4.692   2.594  1.123
+
+#-MEDI IN GROUPS:
+              label  val-2   val-3  val-4
+0   HiC_scaffold_1  0.697   0.605  0.221
+1   HiC_scaffold_2  1.933   0.995  0.942
+2   HiC_scaffold_3  0.960   0.974  0.873
+3   HiC_scaffold_4  3.296   3.107  0.997
+4   HiC_scaffold_5  1.822   1.904  0.340
+5   HiC_scaffold_6  1.222   0.598  0.304
+6   HiC_scaffold_7  0.398   0.331  0.211
+7   HiC_scaffold_8  6.607  10.549  2.190
+8   HiC_scaffold_9  8.021   7.424  1.638
+9  HiC_scaffold_10  6.404   1.039  1.019
+
+#-STDV IN GROUPS:
+              label   val-2   val-3  val-4
+0   HiC_scaffold_1   1.079   0.627  0.147
+1   HiC_scaffold_2  14.828  11.277  2.177
+2   HiC_scaffold_3   2.729   1.874  0.671
+3   HiC_scaffold_4   2.046   0.715  0.636
+4   HiC_scaffold_5   1.854   1.207  0.800
+5   HiC_scaffold_6   0.484   0.615  0.543
+6   HiC_scaffold_7   0.583   0.625  0.524
+7   HiC_scaffold_8   3.864   5.731  0.868
+8   HiC_scaffold_9   4.048   3.852  0.890
+9  HiC_scaffold_10   3.437   3.040  1.005
+```
+
+</details><br>
+
+**GRAPHIC FILE**  `cs.png`
+
+![](assets/ex4_cs.png)
+
+**OUTPUT DATA FILE**  `colors.csv` (*5-colors used*)
+
+```
+label,position,val-5,val-6,val-7,val-8,val-9,count,val-2,val-3,val-4
+HiC_scaffold_1,982.0-10982.0,0.0,0.38,0.822,0.074,0.359,1373,#000000,#000000,#000000
+HiC_scaffold_1,10982.0-20982.0,0.326,0.895,1.057,0.0,0.456,2025,#000000,#000000,#000000
+HiC_scaffold_1,20982.0-30982.0,0.052,0.507,0.378,0.0,0.085,672,#000000,#000000,#000000
+HiC_scaffold_1,30982.0-40982.0,0.0,0.206,0.007,0.0,0.0,427,#000000,#000000,#000000
+HiC_scaffold_1,40982.0-50982.0,0.228,0.41,1.276,0.151,1.03,1279,#000000,#000000,#000000
+...
+```
 
 
 # (2) convert_for_ideogram.py app (python)
