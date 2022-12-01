@@ -5,10 +5,11 @@ import logging			# to provide verbosity level
 import pandas as pd             # to easily parse json object and filter out data; require installation with conda or pip
 import numpy as np              # to parse advanced numerical data structures; require installation
 from colorsys import hls_to_rgb # to generate various color scales
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageColor
 
 
 numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+cs_params_default=[3,0.5,1.0,0.9,'true','false']
 HLS = {'red': 0, 'vermilion': 0.5, 'orange': 1, 'golden': 1.5, 'yellow': 2, 
        'yellowish': 2.5, 'chartreuse': 3, 'leaf': 3.5, 'green': 4, 
        'cobalt_green': 4.5, 'emerald': 5, 'turquoise': 5.5, 'cyan': 6, 
@@ -50,13 +51,17 @@ def generate_colorscale(c=0, t='full', n=12, l=0.5, s=1.0, a=0.9, h='true', r='f
     return { n : i for n, i in enumerate(colors) }, rgba_colors
 
 
-def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true,false", input_file='', labels='', values='', measure='mean', mtype='cell', step='std'):
+def assign_colors(cs='grey', cs_params=cs_params_default, input_file='', labels='', values='', measure='mean', mtype='cell', step='std'):
     """Generate color scale and perform value-to-color mapping"""
 
     # PREPARE COLOR SCALE (using cs argument)
     CS = []
     rgba = []
     csp = cs_params.strip().replace(' ', '').split(',')
+    if len(csp) > 6:
+        logging.error('Provided number of parameters for option -csp is different than expected (6).')
+        sys.exit(1)
+    csp = [cs_params_default[num] if i == '' else i for num,i in enumerate(csp)]
     
     if input_file != '' and  step != "std":
         intervals = [float(x) for x in str(step).split(",")]
@@ -66,8 +71,11 @@ def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true,false", input_file=''
     try:
         tmp_cs = cs.strip().replace(' ', '').split(',')
         if len(tmp_cs) > 1:
-            if tmp_cs[0].startswith('#') or tmp_cs[0].startswith('rgb'):	# ready-made user-provided color scale
-                CS = {num : color for num,color in tmp_cs}
+            if tmp_cs[0].startswith('#'):					# ready-made user-provided color scale
+                CS = {num : color for num,color in enumerate(tmp_cs)}
+                for i in tmp_cs:
+                    h = ImageColor.getcolor(str(i), "RGBA")
+                    rgba.append(h)
             else:								# list of standard colors or equivalent floats
                 CS, rgba = generate_colorscale(1, tmp_cs, len(tmp_cs), float(csp[1]), float(csp[2]), float(csp[3]), str(csp[4]), str(csp[5]))
         else:									# automatically generated colorscale
@@ -81,14 +89,16 @@ def assign_colors(cs='grey', cs_params="3,0.5,1.0,0.9,true,false", input_file=''
         img=Image.new("RGBA", ((n*w)+20, 160),(255,255,255))
         draw = ImageDraw.Draw(img)
         for num,i in enumerate(rgba):
-            j = list(i)
-            j[3] = int(i[3] * 255)		# convert color alpha to 1-255 range
+            if i[3] <= 1.0:
+                j = list(i)
+                j[3] = int(i[3] * 255)		# convert color alpha to 1-255 range
+                i = tuple(j)
             p1 = ((w*num)+10,10)
             shape = [p1, (p1[0]+w,150)]		# [(x0,y0),(x1,y1)]
-            draw.rectangle(shape, fill=tuple(j), outline="black")
+            draw.rectangle(shape, fill=i, outline="black")
         img.save("cs.png")    
 
-    print("COLOR SCALE: " + str(list(CS.values())))
+    print("\nCOLOR SCALE: " + str(list(CS.values()))+"\n")
     if input_file == '':
         sys.exit(1)
 
