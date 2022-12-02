@@ -1,6 +1,6 @@
 # Overview
 
-The **value-to-color mapping** applications are written in Python3 and employ  efficient libraries [pandas and numpy] for operating on a complex data structure. The application **assigns colors** to value ranges/intervals. There are various variants of value-to-color mapping possible to set up by a combination of available options.
+The **value-to-color mapping** applications are written in Python3 and employ  efficient libraries [pandas and numpy] for operating on a complex data structure. The application **assigns colors** to value ranges/intervals. A combination of available options enables setting up several variants of value-to-color mapping.
 
 Value-to-color mapping facilitates:
 - meaningful visualization of the results
@@ -14,33 +14,36 @@ Value-to-color mapping facilitates:
 
 ### Variants of value-to-color mapping
 
-To convert numerical values into colors, some premises must be made. For example, decide whether the **range of values** will be determined for each column separately or whether you collect all numerical results into a single pool. You must also decide what **statistical metric** will be your reference for sizing intervals on the color scale. Of course, the answers to these questions can strongly depend on the **type of data**. Thus, the application has a set of options that give a lot of freedom in this regard.
+Some premises are needed to convert numerical values into colors. For example, decide whether the **range of values** is determined for each column separately or whether you collect all numerical results into a single pool. You also choose what **statistical metric** will be your reference for sizing intervals on the color scale. Of course, the answers to these questions can strongly depend on the **type of data**. Thus, the application has a set of options that give some flexibility.
 
 **First, specify a range of values** <br>
-`-t {glob,column,row,cell}` <br>
-Looking at your data, decide whether you want to operate on a unified pool of values from the entire matrix [`glob`], or whether you need separate subsets for unique labels in rows [`row`] or traits in columns [`column`] or label-trait pairs [`cell`].
+`-t {glob, column, row, cell}` <br>
+Looking at your data, decide whether you want to operate on a unified pool of values from the entire matrix [`glob`] or whether you need separate subsets for unique labels in rows [`row`] or traits in columns [`column`], or label-trait pairs [`cell`].
 
 ![](assets/value_range_variants.png)
 
-**Then, select statistical metric as a reference for the center of the color scale** <br>
-`-m {max,mean,median}` <br>
-The algorithm finds the minimum, maximum, mean, and standard deviation values for the selected type of data grouping (*see previous step*). All statistics are print on the standard output for future reference (*if needed*). The user-selected metric (**mean, median, or half-max**) is assigned to the color corresponding to the center of the color scale. Then, it adjusts values between minimum and *metric* for the lower part of the color scale and values between *metric* and maximum for the upper part of the color scale.
+**Then, select a statistical metric as a reference for the center of the color scale** <br>
+`-m {max, mean, median}` <br>
+The algorithm finds the minimum, maximum, mean, and standard deviation values for the selected type of data grouping (*see the previous step*). All statistics are printed on the standard output for future reference (*if needed*). The user-selected metric (**mean, median, or half-max**) is assigned to the color corresponding to the center of the color scale. Then, it adjusts values between minimum and *metric* for the lower part of the color scale and values between *metric* and maximum for the upper part of the color scale.
 
 ***WARNING!*** <br>
-Look at the histogram of your data to see the shape of the distribution of values. If you detect **skewness**, and still want to use standard deviation to create color intervals, first normalize your data. Thanks to that, you will get more normal-like distribution and standard deviation will no longer be outside the range of values.
+Look at the histogram of your data to see the shape of the distribution of values. If you detect **skewness** and still want to use standard deviation to create color intervals, first normalize your data. Thanks to that, you will get more normal-like distribution, and the standard deviation will no longer be outside the range of values.
 
 ![](assets/distribution.png)
 
 **Finally, provide intervals for value-to-color mapping** <br>
-`-s {'std',intervals}` <br>
-The number of value ranges should correspond to the number of colors used. By default, the value range for a given color (*^ in 3-color scale variant only*) depends on the standard deviation `'std'`. Alternatively, when you need more complex color scale, provide a comma-separated list of metric's multipliers. For example, `"0.2,0.5,1.0,1.2,1.5"` will create five value intervals: `[color_1] < 0.2 * metric < [color_2] < 0.5 * metric < [color_3] < 1.0 * metric < [color_4] < 1.2 * metric < [color_5] < 1.5 * metric` *(metric: mean, median, or half of the maximum)*.
+`-s {'std', <intervals>}` <br>
+The number of value ranges should correspond to the number of colors used. By default, the value range for a given color (*^ in the 3-color scale variant only*) depends on the standard deviation `'std'`. Alternatively, provide a comma-separated list of metric multipliers when you need a more complex color scale. For example, `"0.2,0.5,1.0,1.2,1.5"` will create five value intervals: `[color_1] < 0.2 * metric < [color_2] < 0.5 * metric < [color_3] < 1.0 * metric < [color_4] < 1.2 * metric < [color_5] < 1.5 * metric` *(metric: mean, median, or half of the maximum)*.
 
 ![](assets/color_intervals.png)
 
 
 # (1) assign_colors.py app (python)
 
-The application **converts numerical values to colors** using customizable color scales. The returned output **keeps the the data structure of the user-provided input**. The selected numerical columns (by default all numerical columns) are mapped to colors and the remamining columns (e.g., labels, annotations) are copied unchanged. Besides value-to-color mapping, another important feature of this app is an **automatic generation of highly customizable color scales**. They can later be used independently with various visualization applications (e.g., plotly-based Python web apps, to learn more see <a href="https://datascience.101workbook.org/08-DataVisualization/02-GRAPHS/02-PYTHON/05-plotly-examples-in-jupyterlab" target="_blank">Plotly Graphing (JupyterLab examples)  ⤴</a> in the <a href="https://datascience.101workbook.org" target="_blank">Data Science Workbook  ⤴</a>).
+The application **converts numerical values to colors** using customizable color scales. The returned output **keeps the the data structure of the user-provided input**. The selected numerical columns (by default, all numerical columns) are mapped to colors, and the remaining columns (e.g., labels, annotations) are copied unchanged. Besides value-to-color mapping, another great feature of this app is an **automatic generation of highly customizable color scales**. Later, the color scales can be used independently with various visualization applications (e.g., plotly-based Python web apps, to learn more, see <a href="https://datascience.101workbook.org/08-DataVisualization/02-GRAPHS/02-PYTHON/05-plotly-examples-in-jupyterlab" target="_blank">Plotly Graphing (JupyterLab examples)  ⤴</a> in the <a href="https://datascience.101workbook.org" target="_blank">Data Science Workbook  ⤴</a>).
+
+![](assets/assign_colors_output.png)
+
 
 ## Requirements
 
@@ -180,24 +183,24 @@ COLOR SCALE: ['#000000', '#7f7f7f', '#ffffff']
 
 ![](assets/ex1_cs_grey.png)
 
-*The app, when run without any arguments, prints to the standard output 1) the help message, and 2) the default black-gray-white colorscale as a list of colors in HEX notation. The graphical representation of the color scale is automatically saved in the `cs.png` file for the visual inspection.*
+*When run without arguments, the app prints to the standard output 1) the help message and 2) the default black-gray-white color scale as a list of colors in HEX notation. The graphical representation of the color scale is saved automatically in the `cs.png` file for visual inspection.*
 
 ### **[2] example usage variations to create custom color scale** *(color scale only)*
 * <i> generates customized color scale for general usage</i>
 
-To create customized color scale you have to adjust arguments of two option flags: `-cs` and `-csp`.
+To create a customized color scale, you need to adjust the arguments of two option flags: `-cs` and `-csp`.
 
 The `-cs` sets the general type of the color scale and accepts several string-like arguments:
-* 'grey' - uses the default black-grey-white color scale
-* 'full' - creates the rainbow color scale made up of N discrete colors
-* 'red' - creates the shades scale (black-color-white) of color selected from the list of built-in color keys (*see the list below*)
-* 'orange,red,magenta,crimson' - creates color scale using list of user-selected built-in color keys
-* '2,3,4.5,5.5' - creates color scale using list of user-selected numerical values assigned to built-in color keys
-* '#3f0000,#7f0000,#bf0000,#ff0000,#ff3f3f,#ff7f7f' - creates color scale using list of user-provided colors in HEX notation
+* 'grey' - use the default black-grey-white color scale
+* 'full' - create the rainbow color scale made up of N discrete colors
+* 'red' - create the shades scale (black-color-white) of color selected from the list of built-in color keys (*see the list below*)
+* 'orange,red,magenta,crimson' - create a color scale using a list of user-selected built-in color keys
+* '2,3,4.5,5.5' - create a color scale using a list of user-selected numerical values assigned to built-in color keys
+* '#3f0000,#7f0000,#bf0000,#ff0000,#ff3f3f,#ff7f7f' - creates color scale using a list of user-provided colors in HEX notation
 
 DEFAULT: 'grey'
 
-Use built-in colors (as keywords) or corresponding floats to generate custom color scale:
+Use built-in colors (as keywords) or corresponding floats to generate a custom color scale:
 ```
 'red': 0,               'vermilion': 0.5,               'orange': 1,            'golden': 1.5,
 'yellow': 2,            'yellowish': 2.5,               'chartreuse': 3,        'leaf': 3.5,
@@ -212,22 +215,22 @@ Use built-in colors (as keywords) or corresponding floats to generate custom col
 The `-csp` option adjust the selected color scale to user needs by tuning up to six ordered parameters:
 `N,L,S,A,H,R`
 * (1) **N** - number of discrete colors in the color scale
-* (2) **L** - lightness of the colors defined in the HLS notation; float value in [0,1] range; default is set to 0.5 which denotes original bright color
-* (3) **S** - saturation of the colors defined in the HLS notation; float value in [0,1] range; default is set to 1.0 which denotes original bright color; decreasing the value increases the grey filter [see usage **example C**]
-* (4) **A** - alpha of the colors; float value in [0,1] range; default is set to 0.9 which denotes 90% of solid color and 10% transparency
-* (5) **H** - whether to convert colors to HEX notation (e.g., #FFFFFF for white); 'true' converts rgba notation to HEX annotation
-* (6) **R** - whether to reverse color scale order; by default shades of selected color are created from darker to lighter; 'true' will reverse the color scale
+* (2) **L** - lightness of the colors defined in the HLS notation; float value in [0,1] range; default is 0.5, which denotes the original bright color
+* (3) **S** - saturation of the colors defined in the HLS notation; float value in [0,1] range; default is 1.0, which denotes the original bright color; decreasing of the param increases the grey filter [see usage **example C**]
+* (4) **A** - the alpha of the colors; float value in [0,1] range; default is 0.9, which denotes 90% of solid color and 10% transparency
+* (5) **H** - whether to convert colors to HEX notation (e.g., #FFFFFF for white); 'true' converts RGB notation to HEX annotation
+* (6) **R** - whether to reverse color scale order; by default, the shades of selected color arrange from darker to lighter; the 'true' value reverses the order of the color scale
 
 DEAFULT: `'3,0.5,1.0,0.9,true,false'` <br>
 *^ if you want to alter only selected params, leaving empty the remaining fields will keep their default values* <br>
-*e.g., `'9,,,,,true'` creates 9-color scale with reversed order of colors with all other params being the defaults*
+*e.g., `'9,,,,,true'` creates a 9-color scale with reversed order of colors with all other params being the defaults*
 
 **A. Create shades of the selected color** *(from darker to lighter)* <br>
 
 <details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
 
 <br>
-Creating color scale composed by shades of selected color, means that the original color is set in the middle of the scale and its darker shades (up to black) are added to the one end of the scale while its lighter shades (up to white) are added on the other end of the scale. Shades are generated automatically depending on the user-provided number of discrete colors expected in the color scale. The <b>lightness levels</b> of the user-selected built-in color <b>are set automatically</b> (<i>to create linear steps of the color shades</i>), thus the change in the <b>lightness (L) parameter</b> (second param in the <code>-csp</code> option) <b>has no effect</b>.
+Creating color scale composed by shades of selected color, means that the original color is set in the middle of the scale and its darker shades (up to black) are added to the one end of the scale while its lighter shades (up to white) are added on the other end of the scale. Shades are generated automatically depending on the user-provided number of discrete colors expected in the color scale. The <b>lightness levels</b> of the user-selected built-in color <b>are set automatically</b> (<i>to create linear steps of the color shades</i>), thus the change in the <b>lightness (L) parameter</b> (second param in the <code>-csp</code> option) <b>has no effect</b>. <br><br>
 
 run in the terminal:
 ```
@@ -247,7 +250,7 @@ COLOR SCALE: ['#000000', '#3f0000', '#7f0000', '#bf0000', '#ff0000', '#ff3f3f', 
 
 ![](assets/ex2_cs_red.png)
 
-*The app generates color scale based on the built-in `red` color which is set in the middle of the scale. The number of color intervals is set as the **first** parameter for the `-scp` option. We requested the 9-color scale. The remaining 5 parameters have default values.*
+*The app generates a color scale based on the built-in `red` color, which appears in the middle of the scale. The number of color intervals is the **first** parameter for the `-scp` option. We requested the 9-color scale. The remaining 5 parameters have default values.*
 
 </details><br>
 
@@ -271,7 +274,7 @@ COLOR SCALE: ['#ffffff', '#ffbfbf', '#ff7f7f', '#ff3f3f', '#ff0000', '#bf0000', 
 
 ![](assets/ex2_cs_red_rev.png)
 
-*The app generates the same color scale of `red` shades as in the example A. This time the order of colors is reversed (from lighter to darker) by changing the **6-th** parameter of the `-csp` option to `true`.*
+*The app generates the same color scale of `red` shades as in example A. This time the order of colors is reversed (from lighter to darker) by changing the **6th** parameter of the `-csp` option to `true`.*
 
 </details><br>
 
@@ -296,11 +299,11 @@ COLOR SCALE: ['#ffffff', '#e5d8d8', '#cbb2b2', '#b28c8c', '#996666', '#724c4c', 
 
 ![](assets/ex2_cs_red_sat.png)
 
-*The app still uses the `red` color base for the color scale (as in examples A, B). This time we altered the **third** parameter of the `-csp` option which corresponds to the saturation level. By default, the maximum of 1.0 is set which provides the original (bright) color. As this value decreases (here to 0.2), the proportion of grey filter increases.*
+*The app still uses the `red` color base for the color scale (as in examples A and B). This time we altered the **third** parameter of the `-csp` option, which corresponds to the saturation level. By default, the maximum of 1.0 is set, which provides the original (bright) color. As this value decreases (here to 0.2), the proportion of the grey filter increases.*
 
 </details><br>
 
-**D. Print color scale in the RGBA notation** *(instead of HEX notation)*<br>
+**D. Return color scale in the RGBA notation** *(instead of HEX notation)*<br>
 
 <details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
 
@@ -316,17 +319,17 @@ python3 assign_colors.py -cs 'red' -csp '9,,.2,,false,true'
 COLOR SCALE: ['rgba(255, 255, 255, 0.9)', 'rgba(229, 216, 216, 0.9)', 'rgba(203, 178, 178, 0.9)', 'rgba(178, 140, 140, 0.9)', 'rgba(153, 102, 102, 0.9)', 'rgba(114, 76, 76, 0.9)', 'rgba(76, 51, 51, 0.9)', 'rgba(38, 25, 25, 0.9)', 'rgba(0, 0, 0, 0.9)']
 ```
 
-*The app still uses the `red` color base for the color scale (as in examples A, B, and C). This time we altered the **fifth** parameter of the `-csp` option which determines whether the colorscale is returned in the HEX notation. By default, the `true` value is set. As this value changes to `false`, the color scale is printed in the RGBA notation.*
+*The app still uses the `red` color base for the color scale (as in examples A, B, and C). This time we altered the **fifth** parameter of the `-csp` option, which determines whether the returned color scale is in the HEX notation. By default, the value is `true`. As this value changes to `false`, the printed color scale is in the RGBA notation.*
 
 </details><br>
 
-**E. Create color scale made up of several built-in colors** <br>
+**E. Create a color scale made up of several built-in colors** <br>
 
 <details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
 
 <br>
 
-If you need a color scale made of several clearly distinguishable colors (*instead of shades of a single color*) you can provide a list of built-in color keys (or their float equivalents). Note that in this case, the color scale is composed of X colors directly specified by the user and the first parameter (*N*) of the `-csp` option has no effect.
+If you need a color scale made of several clearly distinct colors (*instead of shades of a single color*), you can provide a list of built-in color keys (or their float equivalents). In this case, note the color scale is composed of X colors directly specified by the user, and the first parameter (*N*) of the `-csp` option has no effect.
 
 run in the terminal:
 ```
@@ -375,7 +378,7 @@ python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',,,0.2,,'
 `COLOR SCALE: ['#feff00', '#ff0000', '#00feff', '#ff00fe', '#3fff00', '#ff7f00']`
 ![](assets/ex2_cs_multi-alpha.png)
 
-* reverse color order (*fourth param of the `-csp` option*)
+* reverse color order (*sixth param of the `-csp` option*)
 ```
 python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',,,,,true'
 ```
@@ -391,13 +394,13 @@ python3 assign_colors.py -cs '2,0,6,10,3.5,1' -csp ',0.5,0.5,0.5,,true'
 
 </details></br>
 
-**F. Create rainbow color scale** <br>
+**F. Create a rainbow color scale** <br>
 
 <details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
 
 <br>
 
-If you like color scales with rainbow-like order of colors, then you should use a keyword `'full'` with option `-cs`. This will automatically pick the colors from the available distribution. The number of discrete colors depends on the user-provided parameter N (the first parameter) with the `-csp` option. Note that rainbow-like color scale can be adjusted with all the params of the `-csp` option (including lightness, saturation, alpha-transparency, and reversing the order of colors).
+If you like color scales with rainbow-like order of colors, then you should use the keyword `'full'` with option `-cs`. That will automatically pick the colors from the available distribution. The number of discrete colors depends on the user-provided parameter N (the first parameter) with the `-csp` option. Note the rainbow-like color scale adjusts with all the parameters of the `-csp` option (including lightness, saturation, alpha-transparency, and reversing the order of colors).
 
 run in the terminal:
 ```
@@ -416,13 +419,13 @@ COLOR SCALE: ['#ff0000', '#ff8400', '#f5ff00', '#71ff00', '#00ff12', '#00ff96', 
 </details><br>
 
 
-**G. Create fully customized color scale made of user-provided colors** <br>
+**G. Create a fully customized color scale made of user-provided colors** <br>
 
 <details style="background-color:#f6feff; padding: 0.5em;"><summary style="color:#ff3870;">expand example</summary>
 
 <br>
 
-If you want to re-create the specific color scale (*e.g., from the past project*), you have to know *apriori* the color codes you want to use. In this case, color codes in HEX notation have to be provided as a comma-separated list with the `-cs` option. Note that such a color scale can NOT be further adjusted with params of the `-csp` option. However, with this usage scenario you can easily merge several color-shade scales (*e.g., red and blue like here*).
+If you wish to re-create the specific color scale (*e.g., from the past project*), you need to know the color codes you want to use. In this case, you provide color codes in HEX notation as a comma-separated list with the `-cs` option. Note that such a color scale can NOT be further adjusted with the params of the `-csp` option. However, with this usage scenario, you can easily merge several color-shade scales (*e.g., red and blue, like here*).
 
 run in the terminal:
 ```
@@ -441,7 +444,7 @@ COLOR SCALE: ['#bf0000', '#ff0000', '#ff3f3f', '#ff7f7f', '#ffbfbf', '#ffffff', 
 </details>
 
 
-### **[3] example usage of the default value-to-color mapping with the default grey scale**
+### **[3] example usage of the default value-to-color mapping with the default greyscale**
 * <i> generates value-to-color mapping for general usage</i>
 
 
@@ -456,7 +459,7 @@ python3 assign_colors.py -i input_file.csv -l 0 -v '' -m 'mean' -t 'cell' -s 'st
 
 **STANDARD OUTPUT** <br>
 
-*By default with value-to-color mapping, statistics from all numeric columns are returned to the standard output. The statistics include 5 metrics: minimum, maximum, mean, median, and standard deviation. Every metric is calculated in a few grouping variants and returned as metrices: per COLUMN (which makes it easy to extract GLOBAL value) and per row-column [unique label-trait pairs] (which provides explicit values for CELL type of data slicing and makes it easy to extract per ROW, i.e. unique label value).*
+*By default, in value-to-color mapping, statistics from all numeric columns are returned to the standard output. The statistics include 5 metrics: minimum, maximum, mean, median, and standard deviation. Each metric is calculated in a few grouping variants and returned as a matrix: per COLUMN (which makes it easy to extract a GLOBAL value) and per row-column [unique label-trait pairs] (which provides explicit values for CELL type of data slicing and makes it easy to extract per ROW, i.e., unique label value).*
 
 <details><summary>expand content</summary>
 
@@ -760,25 +763,26 @@ COLOR SCALE: ['#000000', '#5f1f1f', '#bf3f3f', '#df9f9f', '#ffffff']
 **OUTPUT DATA FILE**  `colors.csv` (*5-colors used*)
 
 ```
-label,position,val-5,val-6,val-7,val-8,val-9,count,val-2,val-3,val-4
-HiC_scaffold_1,982.0-10982.0,0.0,0.38,0.822,0.074,0.359,1373,#000000,#000000,#000000
-HiC_scaffold_1,10982.0-20982.0,0.326,0.895,1.057,0.0,0.456,2025,#000000,#000000,#000000
-HiC_scaffold_1,20982.0-30982.0,0.052,0.507,0.378,0.0,0.085,672,#000000,#000000,#000000
-HiC_scaffold_1,30982.0-40982.0,0.0,0.206,0.007,0.0,0.0,427,#000000,#000000,#000000
-HiC_scaffold_1,40982.0-50982.0,0.228,0.41,1.276,0.151,1.03,1279,#000000,#000000,#000000
+         label,   position,val-5,val-6,val-7,val-8,val-9,count,  val-2,  val-3,  val-4
+HiC_scaffold_1,  982-10982,0.000,0.380,0.822,0.074,0.359, 1373,#000000,#000000,#000000
+HiC_scaffold_1,10982-20982,0.326,0.895,1.057,0.000,0.456, 2025,#000000,#000000,#000000
+HiC_scaffold_1,20982-30982,0.052,0.507,0.378,0.000,0.085,  672,#000000,#000000,#000000
+HiC_scaffold_1,30982-40982,0.000,0.206,0.007,0.000,0.000,  427,#000000,#000000,#000000
+HiC_scaffold_1,40982-50982,0.228,0.410,1.276,0.151,1.030, 1279,#000000,#000000,#000000
 ...
 ```
 
 
 # (2) convert_for_ideogram.py app (python)
 
-## Algorithm
+<b>The corresponding discrete colors replace the numerical values from selected columns. The output format is converted to match the Ideogram-JS requirements (visualization app). </b> The default settings  generates two types of output. The `data-trait-X.json` collects results for each numerical column from the input. The `merge.json` merges results for all selected numerical columns (to compare them on a single ideogram grouped by unique labels).
 
-<b>The numerical values (from selected columns) are replaced by the corresponding discrete colors. </b>
+![](assets/convert_ideogram_output.png)
+
+First, we find the minimum, maximum, mean, median, and standard deviation over the data set. Minimum and maximum determine the range of values mapped to the color scale. The center of the color scale can be a **metric**: *mean*, *median*, or *half of the maximum* value. The number of colors in the color scale and distribution of values assigned to them is customizable. <br>
 
 ![](assets/ideogram_convert_data.png)
 
-First, we find the minimum, maximum, mean, median, and standard deviation over the data set. Minimum and maximum determine the range of values mapped to the color scale. The center of the color scale can be a **metric**: *mean*, *median*, or *half of the maximum* value. The number of colors in the color scale and distribution of values assigned to them is customizable. <br>
 By default, the 3-color scale: [1] *light gray* - [2] *gray* - [3] *black* is used, and the value thresholds between colors depends on the standard deviation `[1] < metric - std < [2] < metric + std < [3]`. <br>
 If different value intervals are needed, they must be a comma-separated list of metric multipliers [M]. For example, "0.2,0.4,0.6,0.8,1.0" will create five value intervals: `[1] < 0.2 * metric < [2] < 0.4 * metric < [3] < 0.6 * metric < [4] < 0.8 * metric < [5] < 1.0 * metric` (*metric: mean, median, or half of the maximum*). When the number of provided multipliers is higher than 3, the built-in 9-color scale will be used (7 gray shades + pink + purple pattern). The **default 3- and 9-color scales** are intended for generating input file for **ideogram-JS** visualization.
 
