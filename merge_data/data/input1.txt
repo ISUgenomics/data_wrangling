@@ -1,0 +1,25 @@
+Fruit,weight(g),color,category
+apple,195,green,apples & pears
+blueberry,0.5,blue,berries
+orange,130,orange,citrus
+lemon,100,yellow,citrus
+strawberry,5,red,berries
+pinapple,1590,white,tropical
+watermelon,9000,pink,melons
+banana,120,yellow,tropical
+plum,65,purple,stone
+pumpkin,4500,orange,melons
+pear,180,yellowish,apples & pears
+grapefruit,246,orange,citrus
+mandarin,30,orange,citrus
+lime,50,green,citrus
+nectarine,150,yellow,stone
+apricot,35,golden,stone
+peach,150,yellow,stone
+mango,200,yellow,tropical
+raspberry,5,pink,berries
+kiwi,75,green,berries
+honeydew,3000,green,melons
+coconut,680,white,tropical
+cherry,5,red,stone
+grape,5,purple,berries
