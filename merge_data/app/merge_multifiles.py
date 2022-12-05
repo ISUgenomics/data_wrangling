@@ -27,7 +27,6 @@ def load_input_file(input_file):
         return pd.read_excel(input_file, index_col=None, header=0)  # read xlsx file with pairs of matched labales (.xlsx)
     else:
         delim = get_delimiter(input_file)
-        sep = delim
         return pd.read_csv(input_file, sep=delim, index_col=None, header=0)  # read text file separated with any delimiter
 
 
@@ -46,7 +45,7 @@ def merge_multifiles(files, matching_cols, keep_cols, error_value, outfile, outp
     path = Path(files)
     if path.is_file():
         with open(files) as file:
-            files = [line.strip() for line in file]    
+            files = [line.strip() for line in file]
     else:
         try:
             files = [f.strip() for f in files.strip().split(',')]
@@ -79,6 +78,7 @@ def merge_multifiles(files, matching_cols, keep_cols, error_value, outfile, outp
             sys.exit(1)
         
     #-- check if all inputs exist; if true, load their content
+    sep = get_delimiter(files[0])
     for num, f in enumerate(files):
         if not Path(f).is_file():
             logging.error('The ' + str(f) + 'does NOT exist. Please provide the correct list of inputs.')
@@ -122,6 +122,7 @@ def merge_multifiles(files, matching_cols, keep_cols, error_value, outfile, outp
                             logging.warning('The provided columns: ' + str(col) + ' expected to be kept from the ' +
                                             str(f) + ' file are incorrect and can NOT be merged into output. Please check your files.')
                 try:
+                    KEEP = list(dict.fromkeys(KEEP))
                     FILES[num] = FILES[num][KEEP]
                 except:
                     logging.error('Selecting columns: \n' + str(KEEP) + '\n expected to be kept from ' + str(f) + ' file has failed.')
@@ -131,9 +132,7 @@ def merge_multifiles(files, matching_cols, keep_cols, error_value, outfile, outp
             DF = FILES[num]
         else:
             DF = pd.merge(DF, FILES[num], left_on=[LABS[0]], right_on=LABS[num], how='outer').drop(LABS[num], axis=1).fillna(error_value)
-    
-#    DF.fillna(error_value)
-    
+
 
 ###-- export output data_file
     if outfile == 'data_output':
@@ -143,7 +142,7 @@ def merge_multifiles(files, matching_cols, keep_cols, error_value, outfile, outp
     elif output_format == 2:					
         DF.to_excel(outfile+'.xlsx', index=False, header=True)   # output in xlsx format (Excel)
     else:
-        DF.to_csv(outfile+'.csv', sep=sep, encoding='utf-8')
+        DF.to_csv(outfile+'.csv', sep=sep, encoding='utf-8')	 # output in custom column-like format (sep from the first input)
 
     for num, i in enumerate(files):
         print(num, i)
@@ -159,8 +158,8 @@ if __name__ == '__main__':
         epilog=''
     )
     parser.add_argument(
-        '-i', '--data-file-1',
-        help='[string] input multi-col file',
+        '-i', '--input-files',
+        help='[string] input multi-col files; comma-separated list of filenames or a column-like file containing paths & filenames of all inputs',
         metavar='files',
         dest='files',
         required=True
@@ -202,6 +201,14 @@ if __name__ == '__main__':
         default=0,
         dest='format'
     )
+    parser.add_argument(
+         '-v', '--verbose', 
+         const=1, 
+         default=0, 
+         type=int, 
+         nargs="?",
+         help="increase verbosity: 0 = warnings, 1 = info"
+    )
 
 ###-- print example of usage and help message when script is run without required arguments
     if len(sys.argv) < 3:
@@ -210,4 +217,10 @@ if __name__ == '__main__':
         sys.exit(1)
 
     args = parser.parse_args()
+    logger = logging.getLogger()
+    if args.verbose == 0:
+        logger.setLevel(logging.WARN) 
+    elif args.verbose >= 1:
+        logger.setLevel(logging.INFO)
+
     merge_multifiles(args.files, args.mcols, args.kcols, args.error, args.outfile, args.format)
