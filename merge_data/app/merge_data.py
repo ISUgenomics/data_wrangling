@@ -2,9 +2,12 @@
 
 import sys			# to manage inline arguments
 import argparse			# to convert python script into program with options
-import pandas as pd		# to easily parse json object and filter out data; require installation with conda or pip
+import logging                  # to provide verbosity level
+from pathlib import Path        # to manage paths in the file system
 from datetime import datetime	# to create unique tag into the default output filename
 import csv			# to read any column-like text file
+import pandas as pd		# to easily parse json object and filter out data; require installation with conda or pip
+
 
 sep=','
 
@@ -24,82 +27,177 @@ def load_input_file(input_file):
         return pd.read_excel(input_file, index_col=None, header=0)  # read xlsx file with pairs of matched labales (.xlsx)
     else:
         delim = get_delimiter(input_file)
-        sep = delim
         return pd.read_csv(input_file, sep=delim, index_col=None, header=0)  # read text file separated with any delimiter
 
 
-def merge_data_by_labels(first_file, second_file, matching_cols, error_value, outfile, output_format):
+def merge_data(files, matching_cols, keep_cols, error_value, outfile, output_format):
 
     tag = datetime.now().strftime("-%d-%m-%Y-%H%M%S")
-###-- read inputs and create data structure
 
-    matching_cols = matching_cols.split(',')
-    file1 = load_input_file(first_file)
-    file2 = load_input_file(second_file)
-    cols1 = file1.columns.tolist()
-    cols2 = file2.columns.tolist()
-    lab1 = matching_cols[0]
-    lab2 = matching_cols[1]
+    FILES = {}
+    COLS = {}
+    LABS = {}
+    DF = pd.DataFrame()
     
-    # if provided indexes of cols, then find their headers
-    if matching_cols[0].isnumeric():  
-        lab1 = cols1[int(matching_cols[0])]
-    if matching_cols[1].isnumeric():
-        lab2 = cols2[int(matching_cols[1])]
+###-- READ INPUTS AND CREATE DATA STRUCTURE
+
+    #-- check correctness of the list of inputs
+    logging.info('1. Validates the list of inputs...')
+    path = Path(files)
+    if path.is_file():
+        with open(files) as file:
+            files = [line.strip() for line in file]
+    else:
+        try:
+            files = [f.strip() for f in files.strip().split(',')]
+        except:
+            logging.error('Please provide a comma-separated names of at least 2 inputs (column-like files).')
+    logging.info('   The list of inputs contains ' + str(len(files)) + ' files.')
+
+    #-- check if matching_cols arg has correct length
+    logging.info('2. Validataes the number of user-provided matching columns...')
+    matching_cols = [str(c).strip() for c in matching_cols.strip().split(',')]
+    l = len(matching_cols)
+    if l == 1:
+        col = matching_cols[0]
+        matching_cols = [col for i in files]
+        logging.info('   The ' + str(col) + ' column from each file will be used for data merging.')
+    elif l != len(files):
+        logging.error('Wrong number of indexes for matching columns. You provided ' + str(l) + 
+                      'indexes while correct number is 1 (when all inputs have the same format and column order) or ' +
+                      str(len(files)) + ' (when matching columns have different indexes for different inputs).')
+        sys.exit(1)
+    else:
+        logging.info('   The following columns from each file will be used for data merging:')
+        for n,i in enumerate(files):
+            logging.info('- ' + str(i) + ' : ' + str(matching_cols[n]))
+
+    #-- check if keep_cols arg has correct format
+    if keep_cols != '':
+        keep_cols = [str(c).strip().split(',') for c in keep_cols.strip().split(':')]
+        l = len(keep_cols)
+        if l == 1:
+            cols = keep_cols[0]
+            keep_cols = [cols for i in files]
+        elif l != len(files):
+            logging.error('Wrong number of column ranges to be kept from inputs. You provided ' + str(l) + 
+                      'lists while correct number is 1 (when keep the same columns from all files) or ' +
+                      str(len(files)) + ' (when keep different columns from each input).')
+            sys.exit(1)
+            
+        logging.info('3. The following columns from each file will be kept:')
+    else:
+        logging.info('3. All columns from every file will be kept.')
         
-###-- add all columns from file2 into file1 based on matching columns
-    cols2.remove(lab2)
-    [file1.insert(len(cols1)+idx, i, '') for idx, i in enumerate(cols2)]
-    for idx, i in file1[lab1].iteritems():
-        val = file2[file2[lab2] == i]
-        if len(val) > 0:
-            for col in cols2:
-                file1.at[idx, col] = val[col].values[0]
+    #-- check if all inputs exist; if true, load their content
+    sep = get_delimiter(files[0])
+    for num, f in enumerate(files):
+        if not Path(f).is_file():
+            logging.error('The ' + str(f) + 'does NOT exist. Please provide the correct list of inputs.')
+            sys.exit(1)
         else:
-            for col in cols2:
-                file1.at[idx, col] = error_value
-#    print(file1)
+            try:
+                FILES[num] = load_input_file(f)							# file1, file2, ...
+                COLS[num] = [name+"_"+str(num) for name in FILES[num].columns.tolist()]		# headers in files
+                FILES[num].columns = COLS[num]							# make sure headers among inputs are unique (different columns names for inputs with the same format)
+            except:
+                logging.error('The ' + str(f) + 'was not loaded. ')
+
+            #-- if provided indexes of matching_cols, then find their headers
+            if matching_cols[num].isnumeric():
+                LABS[num] = COLS[num][int(matching_cols[num])]					# names of matching columns
+            elif str(matching_cols[num])+"_"+str(num) in COLS[num]:
+                LABS[num] = str(matching_cols[num])+"_"+str(num)
+            else:
+                COLS.pop(num, None)
+                FILES.pop(num, None)
+                logging.warning('The user-provided index or name of matching column (' + str(matching_cols[num]) +
+                              ') does NOT exist in the corresponding input file: ' + str(f) + ': \n' +
+                              str(FILES[num].columns) + '. The columns from the ' + str(f) + ' file will NOT be merged in the output..')
+
+            #-- if provided columns to be kept, then filter dataframes
+            if len(keep_cols):
+                tmp_cols = keep_cols[num]
+                KEEP = [LABS[num]]
+                for n, col in enumerate(tmp_cols):
+                    if col.isnumeric() and int(col) < len(COLS[num]):
+                        KEEP.append(COLS[num][int(col)])
+                    elif str(col)+"_"+str(num) in COLS[num]:
+                        KEEP.append(str(col)+"_"+str(num))
+                    elif col == '':
+                        for i in COLS[num]:
+                            KEEP.append(i)
+                    else:
+                        col = col.split('-')
+                        if len(col) == 2 and col[0].isnumeric() and col[1].isnumeric():
+                            for each in range(int(col[0]), int(col[1]) + 1):
+                                if each < len(COLS[num]):
+                                    KEEP.append(COLS[num][each])
+                        else:
+                            logging.warning('The provided columns: ' + str(col) + ' expected to be kept from the ' +
+                                            str(f) + ' file are incorrect and can NOT be merged into output. Please check your files.')
+                try:
+                    KEEP = list(dict.fromkeys(KEEP))
+                    FILES[num] = FILES[num][KEEP]
+                    if LABS[num] in KEEP:
+                        KEEP.remove(LABS[num])
+                    logging.info('- ' + str(f) + ' : ' + str(KEEP))
+                except:
+                    logging.error('Selecting columns: \n' + str(KEEP) + '\n expected to be kept from ' + str(f) + ' file has failed.')
+                        
+###-- add all columns from file2 into file1 based on matching columns
+        if num == 0:
+            DF = FILES[num]
+        else:
+            DF = pd.merge(DF, FILES[num], left_on=[LABS[0]], right_on=LABS[num], how='outer').drop(LABS[num], axis=1).fillna(error_value)
+
+    logging.info('4. The merged dataframe was successfully created!')
 
 ###-- export output data_file
     if outfile == 'data_output':
         outfile += tag        
     if output_format == 1:
-        file1.to_csv(outfile+'.csv', sep=',', encoding='utf-8')     # output in CSV format
+        DF.to_csv(outfile+'.csv', sep=',', encoding='utf-8')     # output in CSV format
     elif output_format == 2:					
-        file1.to_excel(outfile+'.xlsx', index=False, header=True)   # output in xlsx format (Excel)
+        DF.to_excel(outfile+'.xlsx', index=False, header=True)   # output in xlsx format (Excel)
     else:
-        file1.to_csv(outfile+'.csv', sep=sep, encoding='utf-8')
+        DF.to_csv(outfile+'.csv', sep=sep, encoding='utf-8')	 # output in custom column-like format (sep from the first input)
+
+    logging.info('5. The merged dataframe is saved to ' + outfile + ' file.\n\n')
+
+    for num, i in enumerate(files):
+        print(num, i)
 
 
 ###-- add options to the argument parser to make it easier to customize and run the script from the command line
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog='data_matcher.py',
-        description="""Merge data of two files using matching column.\n 
+        prog='merge_data.py',
+        description="""Merge data from multiple files using matching column.\n 
                        Requirements: python3, pandas, openpyxl, csv""",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=''
     )
     parser.add_argument(
-        '-i', '--data-file-1',
-        help='[string] input multi-col file',
-        metavar='file1',
-        dest='file1',
-        required=True
-    )
-    parser.add_argument(
-        '-m', '--data-file-2',
-        help='[string] merge multi-col file',
-        metavar='file2',
-        dest='file2',
+        '-i', '--input-files',
+        help='[string] input multi-col files; comma-separated list of filenames or a column-like file containing paths & filenames of all inputs',
+        metavar='files',
+        dest='files',
         required=True
     )
     parser.add_argument(
         '-c', '--matching-columns',
-        help='list of the same column of two files, e.g., 0,5 or label1,label2 \ncol index starting from 0 [int] or headers',
-        metavar='cols',
-        required=True,
-        dest='cols'
+        help='list of matching columns in the input files, e.g., 1 (when all inputs in the same format) or 0,5 or label1,label2 (when inputs are different) \ncol index starting from 0 [int] or headers',
+        metavar='mcols',
+        dest='mcols',
+        required=True
+    )
+    parser.add_argument(
+        '-k', '--keep-columns',
+        help='list of columns to be kept, e.g., 0,5 or label1,label2 (when all inputs in the same format) or 0,5:8 or label1,label2;label3 (when inputs are different) \ncol index starting from 0 [int] or headers',
+        metavar='kcols',
+        dest='kcols',
+        default=''
     )
     parser.add_argument(
         '-e', '--error-value',
@@ -124,12 +222,26 @@ if __name__ == '__main__':
         default=0,
         dest='format'
     )
+    parser.add_argument(
+         '-v', '--verbose', 
+         const=1, 
+         default=0, 
+         type=int, 
+         nargs="?",
+         help="increase verbosity: 0 = warnings, 1 = info"
+    )
 
 ###-- print example of usage and help message when script is run without required arguments
     if len(sys.argv) < 3:
         parser.print_help()
-        print("\nUSAGE:\n	e.g., python3 merge_data.py -i input_file -m merge_file -c 1,5 \n")
+        print("\nUSAGE:\n	e.g., python3 merge_data.py -i input_file1,input_file2 -c 0 \n")
         sys.exit(1)
 
     args = parser.parse_args()
-    merge_data_by_labels(args.file1, args.file2, args.cols, args.error, args.outfile, args.format)
+    logger = logging.getLogger()
+    if args.verbose == 0:
+        logger.setLevel(logging.WARN) 
+    elif args.verbose >= 1:
+        logger.setLevel(logging.INFO)
+
+    merge_data(args.files, args.mcols, args.kcols, args.error, args.outfile, args.format)
