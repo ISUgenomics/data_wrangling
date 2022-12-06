@@ -2,7 +2,7 @@
 
 ## Overview
 
-The merge_data.py application is written in Python3 and employs an efficient pandas library for operating on a column-like data structure. The application enables the **merging of two files by matching columns** with filling in the **missing data by customized error values**. <br>
+The merge_data.py application is written in Python3 and employs an efficient pandas library for operating on a column-like data structure. The application enables the **merging of two (or more) files by matching columns** with filling in the **missing data by customized error values**. <br>
 
 Merging files by a common column facilitates:
 - creating a robust dataset from different source files
@@ -11,10 +11,10 @@ Merging files by a common column facilitates:
 - detecting missing data in results
 
 ## App Features
-- merging files of different format, i.e., different column headers
+- merging files of the same or different format, i.e., with different column headers or different column order
 - merging files separated by different delimiters (including .xlsx files)
 - merging multiple files all at once
-- keeping only selected columns during the merge
+- keeping only selected columns during the merge (the same or different columns from files)
 
 
 ## Algorithm
@@ -25,11 +25,10 @@ Merging files by a common column facilitates:
         <img src="assets/merge_data.png" alt="Merge data app" width="400"><br>
         <i>The figure shows the algorithm of merging two files by common column.</i>
        </td> <td>
-        <li> both files should be a column-like text file (including Excel .xlsx format and CSV separated with different delimiters) </li>
-        <li> both files should include a matching column (with the same values), but the header may be different in each file </li>
-        <li> data (all columns) from the second file (i.e., merge_file) is added to the first file (i.e., input_file) and automatically saved in the output file </li>
+        <li> all files should be a column-like text file (including Excel .xlsx format and CSV separated with different delimiters) </li>
+        <li> all files should include a matching column (with the same values), but the header may be different in each file </li>
+        <li> data columns from the second (and all next) files is added to the first file and automatically saved in the output file </li>
         <li> the user can customize the name of the output file </li>
-        <li> the user has to provide the indexes of matching columns (numbering starts from 0) or unique headers of columns </li>
         <li> if some values are missing in the merge_data file, the corresponding fields are filled with pre-set missing_value (-9999.99 by default, user can customize it) </li>
     </td> </tr>
 </table>
@@ -83,7 +82,7 @@ required arguments:
 ```
 -i files,     --input-files files          # [string] input multi-col files;
                                              comma-separated list of filenames or a column-like file containing paths & filenames of all inputs
--c mcols,      --matching-columns mcols    # list of matching columns in the input files;
+-c mcols,     --matching-columns mcols     # list of matching columns in the input files;
                                              e.g., 1 (when all inputs in the same format) or
                                              e.g., 0,5 or label1,label2 (when inputs are different)
                                              ^col index starts from 0 [int]; or exact names of column headers
@@ -98,7 +97,7 @@ optional arguments:
 -e missing, --error-value missing          # [any] provide custom value for missing data
 -o outfile, --output-datafile outfile      # [string] provide custom name for the output data_file
 -f format,  --output-format format         # [int] select format for output file: 0 - original (separator from the first input), 1 - csv, 2 - xlsx
--v val, --verbose val                      # {0, 1, 2} select verbosity level: 0 - critical + errors + warnings; 1 - all from the level 0 + info;
+-v val, --verbose val                      # {0, 1} select verbosity level: 0 - critical + errors + warnings; 1 - all from the level 0 + info;
 ```
 
 *defaults for optional arguments:*
@@ -124,7 +123,7 @@ python3 merge_data.py -i file1,file2 -c col0
 
 **EXAMPLE INPUTS**
 
-In the **data** folder are 3 example inputs: `input0.txt`, `input1.txt`, and `input2.txt`. The files contain information about various fruits. The common column stores fruit common name, however, the column names (headers) differ: *'fruit', 'Fruit', 'fruit'*, respectively. In the first and second input, it is the first column (index 0 in Python), while in the third file, this column has index 1 (second column in the file). The remaining columns provides fruit specification, including size, weight, color, and category. Some features are repetitive among the input files. Such a simple dataset will allow us to test a complete set of **data_merge** application in various scenarios.
+In the **data** folder are 3 example inputs: `input0.txt`, `input1.txt`, and `input2.txt`. The files contain information about various fruits. The column shared betwen files stores the fruit common name. The column names (headers) can differ, i.e., *'fruit', 'Fruit', and 'fruit'*, respectively. In the first and second input, it is the first column (index 0 in Python), while in the third file, this column has index 1 (second column in the file). The remaining columns provide fruit specifications, including size, weight, color, and category. Some features are repetitive among the input files. Such a simple dataset will allow us to test a complete set of **data_merge** applications in various scenarios.
 
 |`input0.txt`|`input1.txt`|`input2.txt`|
 |------------|------------|------------|
@@ -132,7 +131,7 @@ In the **data** folder are 3 example inputs: `input0.txt`, `input1.txt`, and `in
 
 * **[1] example usage with minimal required options:**
 
-The minimal required option include providing names of input files and indexes (or names) of matching (common) columns. Let's use the two first inputs, providing their names as a comma-separated list with the option `-i`. In both files, the common column (with all unique values!) is the first column, specifying the name of the fruit. Since the index of this column in both files is the same, provide it with the `-c` option as a single integer value.
+The minimal required option include providing names of input files and indexes (or names) of matching (shared) columns. Let's use the two first inputs, providing their names as a comma-separated list with the option `-i`. In both files, the common column (with all unique values!) is the first column, specifying the name of the fruit. Since the index of this column in both files is the same, provide it with the `-c` option as a single integer value.
 
 run in the terminal:
 ```
@@ -145,7 +144,7 @@ equal using all default options:
 python3 merge_data.py -i input0.txt,input1.txt -c 0 -k '' -e -9999.99 -o 'data_output' -f 0 -v 0
 ```
 
-The algorithm merges two input files using a common column (with index 0) to match the data corresponding to the same entry (here: fruit). All the data columns are kept from both files (option `-k ''`). The data is combined in the 'outer' scheme, which means that the result will be the sum of the sets from both inputs. Missing data in the corresponding set will be replaced by the default error value (option `-e -9999.99`). The merged data is saved to the *data_output-{data_stamp}* file with option `-o` and output format matches the separator from the first-provided input (option `-f 0`). The app logger prints to standard output info about all critical, error, and warning events during the calculations.
+The algorithm merges two input files using a common column (with index 0) to match the data corresponding to the entry (here: fruit). All the data columns are kept from both files (option `-k ''`). The data is combined in the 'outer' scheme. Thus the result will be the sum of the sets from both inputs. Missing data in the merged entry is replaced by the default error value (option `-e -9999.99`). The merged data is saved to the *data_output-{data_stamp}* file with option `-o`, and output format matches the separator from the first-provided input (option `-f 0`). The app logger, during the calculations, prints info about all critical, error, and warning events to standard output.
 
 **STANDARD OUTPUT**
 
@@ -164,7 +163,7 @@ The algorithm merges two input files using a common column (with index 0) to mat
 3,lemon,3,3.5,100.0,yellow,citrus
 ...
 ```
-Note the column names in the output file are altered by adding the suffix (*_N*) corresponding to the index of the input from which the column is derived. The pairs of inputs and assigned indexes are print to the standard output for easy reference. This allows easy identification of data when the inputs format is the same (i.e., column headers; *here: both inputs contain 'weight' column*).
+Note the column names in the output file are altered by adding the suffix (*_N*) corresponding to the index of the input from which the column is derived. The pairs of inputs and assigned indexes are printed to the standard output for easy reference. That allows easy identification of data when the input format is the same (i.e., column headers; *here: both inputs contain a 'weight' column*).
 
 
 * **[2] example usage when matching columns have different indexes:**
@@ -217,7 +216,7 @@ python3 merge_data.py -i input1.txt,input2.txt -c Fruit,fruit
 ```
 </details><br>
 
-**C.** and when the column header is same for all inputs (even if the indexes are different), you can provide it as a single value:
+**C.** when the column header is the same for all inputs (even if the indexes are different), you can provide it as a single value:
 ```
 python3 merge_data.py -i input0.txt,input2.txt -c fruit
 ```
@@ -225,7 +224,7 @@ python3 merge_data.py -i input0.txt,input2.txt -c fruit
 *^ the same outputs as in example A*
 
 
-<i>In the examples <b>A, B,</b> and <b>C</b> </i> all the remaining settings are default, so all data columns from all inputs are kept, and the value of <i>-9999.99</i> is assigned to all missing data. To learn more about the default settings, see <b>[1] example usage with minimal required options</b>.
+<i>In examples <b>A, B,</b> and <b>C</b> </i>, all the remaining settings are default, so all data columns from all inputs are kept, and the value of <i>-9999.99</i> is assigned to all missing data. See <b>[1] example usage with minimal required options</b> to learn more about the default settings.
 
 * **[3] example usage of merging multiple files, all in the same format:**
 
@@ -262,7 +261,7 @@ python3 merge_data.py -i input0.txt,input0.txt,input0.txt,input0.txt,input0.txt 
 
 **B.** If the number of files is large (say, more than 5), use a 1-column file listing all the inputs.
 
-First, list paths & names of all inputs into a one-column file. *For example, go to the directory with all ionputs and execute the command:*
+First, list the paths & names of all inputs in a one-column file. *For example, go to the directory with all inputs and execute the command:*
 ```
 for i in input*; do echo `pwd`/$i >> input_list; done
 ```
@@ -306,9 +305,9 @@ python3 merge_data.py -i input_list -c 0
 </details><br>
 
 
-* **[4] example usage of merging multiple files of different format:**
+* **[4] example usage of merging multiple files of different formats:**
 
-To merge any number of files in few different formats, simply (1) expand the input list, and (2) specify the matching columns from **all** inputs. *See the previous example to learn how to smartly and effortlessly enter a long list of inputs (1).* The corresponding matched columns need to be provided directly in ordered manner as a comma separated list of column indexes or column headers. The length of that list must match the number of inputs. Also, **no field** in the list can be empty (e.g., *0,,0,1,2*).
+To merge any number of files in a few different formats, simply (1) expand the input list, and (2) specify the matching columns from **all** inputs. *See the previous example to learn how to smartly and effortlessly enter a long list of inputs (1).* The corresponding matched columns need to be provided directly in an ordered manner as a comma-separated list of column indexes or column headers. The length of that list must match the number of inputs. Also, **no field** in the list can be empty (e.g., *0,,0,1,2*).
 
 Let's assume the list of inputs is stored in the `inputs_list` file:
 
@@ -350,11 +349,11 @@ python3 merge_data.py -i input_list -c fruit,Fruit,fruit
 
 * **[5] example usage of grabbing selected columns only while merging inputs:**
 
-You might have noticed that some columns are redundant between example inputs (*e.g., weight or color*). You can choose whether to keep all repetitions or only selected ones from a given file. You can also drop other columns that are not interesting for your further analysis. All operations to keep only selected columns are done with the `-k` option. The syntax of its arguments is very similar to the `-c` option, where you specified matching columns. In this case, you can select multiple columns from a single inupt. The list of columns to keep from a given input is separated by a comma, and the lists for subsequent inputs are separated by a colon. The order must correspond to the order of inputs. An empty value corresponding to a given input means that all columns will be kept.
+You might have noticed that some columns are redundant between example inputs (*e.g., weight or color*). You can choose whether to keep all repetitions or only selected ones from a given file. You can also drop other columns that are not interesting for your further analysis. All operations to keep only select columns uses with the `-k` option. The syntax of its arguments is very similar to the `-c` option, where you specified matching columns. In this case, you can select multiple columns from a single input. The columns to keep from a given input are separated by a comma, while the lists for subsequent inputs are separated by a colon. The order must correspond to the order of inputs. An empty value corresponding to a given input means that all columns will be kept.
 
-Let's use the `input_list` from the example 4.
+Let's use the `input_list` from example 4.
 
-**A.** select single column (of the same index) from every input:
+**A.** keep a single column (of the same index) from every input:
 ```
 python3 merge_data.py -i input_list -c 0,0,1 -k 2
 ```
@@ -378,7 +377,7 @@ python3 merge_data.py -i input_list -c 0,0,1 -k 2
 ```
 </details><br>
 
-**B.** select single column (of the same name) from every input:
+**B.** keep a single column (of the same name) from every input:
 ```
 python3 merge_data.py -i input_list -c 0,0,1 -k color
 ```
@@ -403,7 +402,7 @@ WARNING:root:The provided columns: ['color'] expected to be kept from the /Users
 ...
 ```
 
-*Note the `input0.txt` does not contain 'weight' column and so that's why the warning message appeard.*
+*Note the `input0.txt` does not contain the 'weight' column, so that's why the warning message appeared.*
 </details><br>
 
 **C.** select multiple columns (of the same indexes or names) from every input:
@@ -411,7 +410,7 @@ WARNING:root:The provided columns: ['color'] expected to be kept from the /Users
 python3 merge_data.py -i input_list -c 0,0,1 -k 0,2-3,color
 ```
 
-*^ Note, you can specify individual columns separated by commas or provide dash-separated ranges of indexes. You can also mix indexes and names in the requested list. If a column with a given index or name does not exist in some inputs, it will simply be ignored (with warnings returned on the standard output).*
+*^ Note you can specify individual columns separated by commas or provide dash-separated ranges of indexes. You can also mix indexes and names in the requested list. If a column with a given index or name does not exist in some inputs, it will simply be ignored (with warnings returned on the standard output).*
 
 <details><summary>see outputs</summary>
 
@@ -436,7 +435,7 @@ WARNING:root:The provided columns: ['color'] expected to be kept from the /Users
 
 **D.** select different columns from various inputs:
 
-*^ useful when merging files of different format/content*
+*^ useful when merging files of different formats/content*
 
 ```
 python3 merge_data.py -i input_list -c 0,0,1 -k 1:1-3:index
@@ -474,10 +473,10 @@ python3 merge_data.py -i input0.txt,input1.txt -c 0 -e "missing"
 * **[7] example usage with customized name of output file:**
 
 ```
-python3 merge_data.py -i input0.txt,input1.txt -c 0 -o my_merged_data.txt
+python3 merge_data.py -i input0.txt,input1.txt -c 0 -o my_merged_data
 ```
 
-*The example parses two column-like files (input_file and merge_file), where the common column has index = 0 in the first file, and index = 0 in the second file. The missing data will be replaced with the default error value = -9999.99. The merged results will be saved into the customized 'my_merged_data.txt' file.*
+*The example parses two column-like files (input_file and merge_file), where the common column has index = 0 in the first file, and index = 0 in the second file. The missing data will be replaced with the default error value = -9999.99. The merged results will be saved into the customized 'my_merged_data' file.*
 
 * **[8] example usage with Excel format of output file:**
 
@@ -485,12 +484,12 @@ python3 merge_data.py -i input0.txt,input1.txt -c 0 -o my_merged_data.txt
 python3 merge_data.py -i input0.txt,input1.txt -c 0 -f 2
 ```
 
-*The example parses two column-like files (input_file and merge_file), where the common column has index = 0 in the first file, and index = 0 in the second file. The missing data will be replaced with the default error value = -9999.99. The merged results will be saved into the default 'data_output-$date.xlsx' file in Excel format.*
+*The example parses two column-like files (input_file and merge_file), where the common column has index = 0 in the first file, and index = 0 in the second file. The missing data will be replaced with the default error value = -9999.99. The merged results will be saved into the default 'data_output-$date.xlsx' file in Excel format (option `-f 2`).*
 
 * **[9] fully customized example usage with user-provided value for missing data and output filename saved in CSV format:**
 
 ```
-python3 merge_data.py -i input0.txt,input1.txt -c 0 -e missing -o my_merged_data -f 1
+python3 merge_data.py -i input0.txt,input1.txt -c 0 -k 1,2:2-3 -e missing -o my_merged_data -f 1 -v 1
 ```
 
-*The example parses two column-like files (input_file and merge_file), where the common column has index = 0 in the first file, and index = 0 in the second file. The missing data will be replaced with the <b>customized error value = 'missing'</b>. The merged results will be saved into the customized 'my_merged_data.csv' file in CSV format.*
+*The example parses two column-like files (input_file and merge_file), where the common column has index = 0 in the first file, and index = 0 in the second file. From the first file columns with the index 1 and 2 will be kept. From the second file columns between indexes 2 and 3 will be kept. The missing data will be replaced with the <b>customized error value = 'missing'</b>. The merged results will be saved into the customized 'my_merged_data.csv' file in CSV format. During calculation the 'INFO' level verbosity will be printed to standard output.*
