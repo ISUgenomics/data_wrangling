@@ -63,9 +63,11 @@ conda info -e
 
 # Overview of available applications
 
-* [assign_colors](#assign_colors-app) - value to color mapping based on the value ranges (or intervals); includes *convert_for_ideogram* app [<i>see <a href="https://bioinformaticsworkbook.org/dataVisualization/Plotly/01-ideogram-chromosome-bands.html#gsc.tab=0" target="_blank">ideogram visualization  ⤴</a></i>]
-* [bin_data](#bin_data-app) - grouping, slicing, and aggreagting data
-* [data_merge](#data_merge-app) - merging multiple files using a matching column
+| APP | description |
+|-----|-------------|
+| [assign_colors](#assign_colors-app) | value to color mapping based on the value ranges (or intervals); <br> includes *convert_for_ideogram* app [<i>see <a href="https://bioinformaticsworkbook.org/dataVisualization/Plotly/01-ideogram-chromosome-bands.html#gsc.tab=0" target="_blank">ideogram visualization  ⤴</a></i>] |
+| [bin_data](#bin_data-app) | grouping, slicing, and aggreagting data |
+| [data_merge](#data_merge-app) | merging multiple files using a matching column |
 
 
 ## assign_colors app
