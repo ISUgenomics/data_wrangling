@@ -93,9 +93,6 @@ The application enables the merging of two (or multiple) files by matching colum
 <table>
   <tr> <td>
         <img src="merge_data/assets/merge_data.png" alt="Merge data app" width="400"><br>
-        <i>The figure shows the algorithm of merging two files by common column. <br>
-        The dark teal color corresponds to the record available only in the one of input files.<br>
-        The red color corresponds to the missing records (error_value) in the merged output.</i>
        </td> <td> <b>APP FEATURES:</b><br><br>
         <li> merging files of the <b>same or different format</b>,
         <i>i.e., with different column headers or different column order </i><br><br>
@@ -107,3 +104,7 @@ The application enables the merging of two (or multiple) files by matching colum
         <li> providing <b>custom <i>error_value</i></b> for missing data
     </td> </tr>
 </table>
+
+<i>The figure shows the algorithm of merging two files by common column. The dark teal color corresponds to the record available only in the one of input files. The red color corresponds to the missing records (error_value) in the merged output.</i>
+
+---
