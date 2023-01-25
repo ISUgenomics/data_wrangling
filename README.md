@@ -63,8 +63,6 @@ conda info -e
 
 # Overview of available applications
 
----
-
 ## bin_data app
 
 The application enables grouping/slicing of the data as the ensembles of rows and aggregates observables from the numerical columns by calculating the sum or mean in each group/slice.
