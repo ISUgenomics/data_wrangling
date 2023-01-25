@@ -96,14 +96,14 @@ The application enables the merging of two (or multiple) files by matching colum
         <i>The figure shows the algorithm of merging two files by common column. <br>
         The dark teal color corresponds to the record available only in the one of input files.<br>
         The red color corresponds to the missing records (error_value) in the merged output.</i>
-       </td> <td> <b>App features:</b><br>
-        <li> merging files of the <b>same or different format</b>,</li>
+       </td> <td> <b>APP FEATURES:</b><br><br>
+        <li> merging files of the <b>same or different format</b>,
         <i>i.e., with different column headers or different column order </i><br><br>
-        <li> merging files separated by <b>different delimiters</b> </li>
+        <li> merging files separated by <b>different delimiters</b>
         <i>(including Excel .xlsx files)</i><br><br>
-        <li> merging <b>multiple files all at once</b> </li><br>
-        <li> <b>keeping only selected columns</b> during the merge</li>
+        <li> merging <b>multiple files all at once</b><br><br>
+        <li> <b>keeping only selected columns</b> during the merge
         <i>(the same or different columns from files) </i><br><br>
-        <li> providing <b>custom <i>error_value</i></b> for missing data </li>
+        <li> providing <b>custom <i>error_value</i></b> for missing data
     </td> </tr>
 </table>
