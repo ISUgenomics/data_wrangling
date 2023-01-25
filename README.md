@@ -63,9 +63,29 @@ conda info -e
 
 # Overview of available applications
 
+* [assign_colors]() - value to color mapping based on the value ranges (or intervals); includes *convert_for_ideogram* app [<i>see <a href="https://bioinformaticsworkbook.org/dataVisualization/Plotly/01-ideogram-chromosome-bands.html#gsc.tab=0" target="_blank">ideogram visualization  ⤴</a></i>]
 * [bin_data](#bin_data-app) - grouping, slicing, and aggreagting data
 * [data_merge](#data_merge-app) - merging multiple files using a matching column
 
+
+## assign_colors app
+
+The application enables value-to-color mapping. In other words, it assigns colors to ranges/intervals of numerical values. The colors (with the user-selected scale) can then be used in various visualization programs, including directly in python.<br>
+*Programmatically created and saved color scales will help maintain color reproducibility in future repetitions or similar projects.*
+
+* **app in the repo:** <a href="https://github.com/ISUgenomics/data_wrangling/tree/main/assign_colors" target="_blank">ISUgenomics/data_wrangling/<b>assign_colors</b>  ⤴</a>
+
+* **docs:** <a href="https://github.com/ISUgenomics/data_wrangling/tree/main/assign_colors#overview" target="_blank">README  ⤴</a>
+
+* **assign_colors tutorial:** <span style="color: #ff3870;font-weight: 500;">comming soon</span>, *for now see the comprehensive docs*
+<!--<a href="https://datascience.101workbook.org/07-DataParsing/03-DATA-WRANGLING-APPS/02-slice-or-bin-data-py" target="_blank">DataScience_Workbook/07. Data Acquisition and Wrangling/Data Wrangling/<b>Aggregate data over slicing variations</b>  ⤴</a> -->
+
+* **convert_for_ideogram tutorial:** <a href="https://bioinformaticsworkbook.org/dataVisualization/Plotly/01-ideogram-chromosome-bands.html#gsc.tab=0" target="_blank">Bioinformatics_Workbook/Data Visualization/<b>Ideogram: display chromosome bands</b>  ⤴</a>
+
+<p style="text-align: center;"><img src="assign_colors/assets/ideogram_convert_data.png" alt="Merge data app" width="600"></p>
+<i>The figure shows the main steps of the assign_colors algorithm. The numerical values (from selected columns) are replaced by the corresponding discrete colors based on the user-selected ranges.</i>
+
+---
 
 ## bin_data app
 
