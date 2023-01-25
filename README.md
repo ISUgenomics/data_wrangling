@@ -92,9 +92,9 @@ The application enables the merging of two (or multiple) files by matching colum
 
 <table>
   <tr> <td>
-        <img src="merge_data/assets/merge_data.png" alt="Merge data app" width="400"><br>
+        <img src="merge_data/assets/merge_data.png" alt="Merge data app" width="500"><br>
        </td> <td> <b>APP FEATURES:</b><br><br>
-        <li> merging files of the <b>same or different format</b>,
+        <li> merging files of the <b>same or different format</b>,<br>
         <i>i.e., with different column headers or different column order </i><br><br>
         <li> merging files separated by <b>different delimiters</b>
         <i>(including Excel .xlsx files)</i><br><br>
