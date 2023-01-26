@@ -1,5 +1,13 @@
 # merge_data app (python)
 
+* [Overview](#overview)
+* [App Features](#app-features)
+* [Algorithm](#algorithm)
+* [Requirements](#requirements)
+* [Options](#options)
+* [Example usage](#example-usage)
+* [Hands-on tutorial](#hands-on-tutorial)
+
 ## Overview
 
 The merge_data.py application is written in Python3 and employs an efficient pandas library for operating on a column-like data structure. The application enables the **merging of two (or more) files by matching columns** with filling in the **missing data by customized error values**. <br>
@@ -493,3 +501,8 @@ python3 merge_data.py -i input0.txt,input1.txt -c 0 -k 1,2:2-3 -e missing -o my_
 ```
 
 *The example parses two column-like files (input_file and merge_file), where the common column has index = 0 in the first file, and index = 0 in the second file. From the first file columns with the index 1 and 2 will be kept. From the second file columns between indexes 2 and 3 will be kept. The missing data will be replaced with the <b>customized error value = 'missing'</b>. The merged results will be saved into the customized 'my_merged_data.csv' file in CSV format. During calculation the 'INFO' level verbosity will be printed to standard output.*
+
+
+## Hands-on tutorial
+
+<a href="https://datascience.101workbook.org/07-DataParsing/03-DATA-WRANGLING-APPS/01-merge-data-py" target="_blank">DataScience_Workbook/07. Data Acquisition and Wrangling/Data Wrangling/<b>Merge files by common column</b>  ⤴</a>

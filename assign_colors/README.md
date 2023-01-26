@@ -1,4 +1,18 @@
-# Overview
+# assign_colors app
+
+* [Overview](#overview)
+* [Algorithm](#algorithm)
+* [(1) assign_colors.py app](#1-assign_colorspy-app-python)
+  * [Requirements](#requirements)
+  * [Options](#options-of-assign_colorspy)
+  * [Example usage](#example-usage)
+* [(2) convert_for_ideogram.py](#2-convert_for_ideogrampy-app-python)
+  * [Requirements](#requirements-1)
+  * [Options](#options-of-convert_to_ideogrampy)
+  * [Example usage](#example-usage-1)
+  * [Hands-on tutorial](#hands-on-tutorial) *(Bioinformatics Workbook)*
+
+## Overview
 
 The **value-to-color mapping** applications are written in Python3 and employ  efficient libraries [pandas and numpy] for operating on a complex data structure. The application **assigns colors** to value ranges/intervals. A combination of available options enables setting up several variants of value-to-color mapping.
 
@@ -1143,3 +1157,7 @@ python3 convert_for_ideogram.py -i input_file.csv -l 0 -r 1 -v 2,3,6,7 -m 'max' 
   ]
 }
 ```
+
+## Hands-on tutorial
+
+<a href="https://bioinformaticsworkbook.org/dataVisualization/Plotly/01-ideogram-chromosome-bands.html#gsc.tab=0" target="_blank">Bioinformatics_Workbook/Data Visualization/<b>Ideogram: display chromosome bands</b>  ⤴</a>

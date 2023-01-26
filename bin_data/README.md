@@ -1,5 +1,13 @@
 # bin_data.py app (python)
 
+* [Overview](#overview)
+* [Algorithm](#algorithm)
+* [Requirements](#requirements)
+* [Options](#options)
+* [Hands-on tutorial](#hands-on-tutorial)
+
+---
+
 ## Overview
 
 The **bin_data.py** application is written in Python3 and employs efficient libraries [pandas and numpy] for operating on a complex data structure. The application **aggregates observables** [by summing or averaging numerical values] over the data slices (rows grouped in a slice). The statistic (**STATS**) is calculated separately for each column of numerical values, while **R** = 'ranges-column' can be used to bin data based on the incrementation of values.
@@ -12,7 +20,7 @@ Aggregating observables facilitates:
 
 ## Algorithm
 
-![Bin data app](bin_data.png)<br>
+![Bin data app](assets/bin_data.png)<br>
 <i>The figure shows the main steps of the <code>bin_data</code> algorithm.</i><br>
 
 <b>1)</b> The optimal data structure requires:<br>
@@ -168,3 +176,7 @@ By default:
 - the statistics are calculated for all numerical columns with the precision of 2 decimal places (with option <code>-d 2</code> and saved to the 'output_data.csv' file)
 - the verbosity level set to 0 means logging the warnings, errors, and critical messages, while skipping the info about the algorithm progress
 </i>
+
+## Hands-on tutorial
+
+<a href="https://datascience.101workbook.org/07-DataParsing/03-DATA-WRANGLING-APPS/02-slice-or-bin-data-py" target="_blank">DataScience_Workbook/07. Data Acquisition and Wrangling/Data Wrangling/<b>Aggregate data over slicing variations</b>  ⤴</a>
