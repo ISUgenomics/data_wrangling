@@ -90,7 +90,7 @@ def merge_data(files, matching_cols, keep_cols, error_value, outfile, output_for
         logging.info('3. All columns from every file will be kept.')
         
     #-- check if all inputs exist; if true, load their content
-    sep = get_delimiter(files[0])
+#    sep = get_delimiter(files[0])
     for num, f in enumerate(files):
         if not Path(f).is_file():
             logging.error('The ' + str(f) + 'does NOT exist. Please provide the correct list of inputs.')
@@ -98,10 +98,11 @@ def merge_data(files, matching_cols, keep_cols, error_value, outfile, output_for
         else:
             try:
                 FILES[num] = load_input_file(f)							# file1, file2, ...
-                COLS[num] = [name+"_"+str(num) for name in FILES[num].columns.tolist()]		# headers in files
+                COLS[num] = [str(name)+"_"+str(num) for name in FILES[num].columns.tolist()]		# headers in files
                 FILES[num].columns = COLS[num]							# make sure headers among inputs are unique (different columns names for inputs with the same format)
             except:
-                logging.error('The ' + str(f) + 'was not loaded. ')
+                logging.error('The ' + str(f) + ' was not loaded. ')
+                sys.exit(1)
 
             #-- if provided indexes of matching_cols, then find their headers
             if matching_cols[num].isnumeric():
